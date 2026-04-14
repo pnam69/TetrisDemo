@@ -188,11 +188,13 @@ public class Board : MonoBehaviour
         {
             if (IsLineFull(y))
             {
+                if (Instance != null)
+                    Instance.StartCoroutine(Instance.PlayLineClearFlash(y));
+
                 DeleteLine(y);
-                linesCleared++;
-                // animate clear before moving down
-                Instance?.StartCoroutine(Instance.ClearAndCollapse(y));
+                MoveAllDown(y);
                 y--;
+                linesCleared++;
             }
         }
 
@@ -234,9 +236,8 @@ public class Board : MonoBehaviour
         }
     }
 
-    IEnumerator ClearAndCollapse(int y)
+    IEnumerator PlayLineClearFlash(int y)
     {
-        // flash the cleared row visually (if visuals exist)
         if (visualsRoot != null)
         {
             Transform flashRow = visualsRoot.Find("ClearFlashRow_" + y);
@@ -264,11 +265,6 @@ public class Board : MonoBehaviour
                 }
             }
         }
-
-        // then move everything down
-        MoveAllDown(y);
-
-        yield return null;
     }
     void OnDrawGizmos()
     {
