@@ -174,12 +174,24 @@ public class GameManager : MonoBehaviour
 
         if (IsGameOverByGrid())
         {
-            isGameOver = true;
-            Debug.Log("Game Over!");
-            SaveProgress();
-            UpdateUI();
+            TriggerGameOver();
             return;
         }
+        if(shotsLeft <= 0)
+        {
+            TriggerGameOver();
+            return;
+        }
+    }
+
+    public void TriggerGameOver()
+    {
+        if (isGameOver || isVictory) return;
+
+        isGameOver = true;
+        Debug.Log("Game Over!");
+        SaveProgress();
+        UpdateUI();
     }
 
     bool IsGameOverByGrid()
@@ -298,7 +310,38 @@ public class GameManager : MonoBehaviour
         if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + (grid != null ? grid.grid.Count : 0);
         if (victoryPanel != null) victoryPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        
+        // ensure shooter has a launcher bubble after restart
+        EnsureRefs();
+        if (shooter != null)
+        {
+            shooter.ResetShooter();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Shooter not found on restart - cannot spawn launcher bubble.");
+        }
     }
+
+    public void StartButton()
+    {
+        RestartCurrentLevel();
+    }
+
+    public void RestartButton()
+    {
+        RestartCurrentLevel();
+    }
+
+    public void ExitButton()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     public LineRenderer loseLine;
     void UpdateLoseLine()
     {

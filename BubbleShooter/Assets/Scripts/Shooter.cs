@@ -40,6 +40,35 @@ public class Shooter : MonoBehaviour
         SpawnBubble();
     }
 
+    public void ResetShooter()
+    {
+        if (currentBubble != null)
+        {
+            Destroy(currentBubble.gameObject);
+            currentBubble = null;
+        }
+
+        canShoot = true;
+
+        if (bubblePrefab == null)
+        {
+            GridSystem grid = FindObjectOfType<GridSystem>();
+            if (grid != null)
+                bubblePrefab = grid.bubblePrefab;
+        }
+
+        if (bubbleColors == null || bubbleColors.Length == 0)
+        {
+            GridSystem grid = FindObjectOfType<GridSystem>();
+            if (grid != null && grid.bubbleColors != null && grid.bubbleColors.Length > 0)
+            {
+                bubbleColors = grid.bubbleColors;
+            }
+        }
+
+        SpawnBubble();
+    }
+
     void Update()
     {
         if (GameManager.Instance != null && (GameManager.Instance.isGameOver || GameManager.Instance.isVictory))

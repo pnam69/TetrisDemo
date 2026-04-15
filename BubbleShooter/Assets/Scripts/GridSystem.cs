@@ -16,11 +16,12 @@ public class GridSystem : MonoBehaviour
         public Vector2Int? anchor;
         public Vector2 hitPoint;
     }
-
+    [SerializeField, Range(0.001f, 1f)]
+    public float wallThickness = 0.05f;
     private Queue<SnapRequest> snapQueue = new();
     private HashSet<int> pendingSnapIds = new();
     private bool processing;
-    public float cellSize = 1f;
+    public float cellSize = 1.2f;
     public int minMatchCount = 3;
     public GameObject bubblePrefab;
     public Color[] bubbleColors;
@@ -31,8 +32,8 @@ public class GridSystem : MonoBehaviour
     [Range(0.75f, 1f)] public float hexRowFactor = 0.866f;
     [Range(0f, 1f)] public float rowXOffset = 0.5f;
     [Range(2, 10)] public int defaultColorCount = 4;
-    public Color wallVisualColor = new Color(0.65f, 0.8f, 1f, 0.35f);
-    public Color boardBackgroundColor = new Color(0.08f, 0.1f, 0.16f, 0.45f);
+    public Color wallVisualColor = new Color(0.85f, 0.8f, 1f, 1.0f);
+    public Color boardBackgroundColor = new Color(0.08f, 0.1f, 0.16f, 0.05f);
     private static Sprite whiteSprite;
 
     public Dictionary<Vector2Int, Bubble> grid = new();
@@ -150,7 +151,11 @@ public class GridSystem : MonoBehaviour
             sr.sortingOrder = -20;
 
             visualGo.transform.localPosition = col.offset;
-            visualGo.transform.localScale = new Vector3(col.size.x, col.size.y, 1f);
+            visualGo.transform.localScale = new Vector3(
+                wallThickness,
+                col.size.y,
+                1f
+            );
         }
     }
 
@@ -169,11 +174,11 @@ public class GridSystem : MonoBehaviour
         if (top == null) return;
 
         BoxCollider2D topCollider = top.GetComponent<BoxCollider2D>();
-        if (topCollider == null)
-        {
-            topCollider = top.AddComponent<BoxCollider2D>();
-            topCollider.size = new Vector2(10f, 0.5f);
-        }
+        //if (topCollider == null)
+        //{
+        //    topCollider = top.AddComponent<BoxCollider2D>();
+        //    topCollider.size = new Vector2(10f, 0.5f);
+        //}
     }
 
     private static readonly Vector2Int[] EvenRowNeighbors =
