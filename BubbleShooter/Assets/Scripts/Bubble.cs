@@ -101,7 +101,6 @@ public class Bubble : MonoBehaviour
         Vector2 normal = col.contacts[0].normal;
         Vector2 hitPoint = col.contacts[0].point;
 
-        // Only wall bounce.
         if (col.gameObject.CompareTag("Wall"))
         {
             rb.linearVelocity = Vector2.Reflect(rb.linearVelocity, normal);
@@ -113,7 +112,6 @@ public class Bubble : MonoBehaviour
 
         if (!hitBubble && !hitTop) return;
 
-        // Freeze projectile before grid snap request.
         rb.linearVelocity = Vector2.zero;
         rb.angularVelocity = 0f;
         rb.simulated = false;

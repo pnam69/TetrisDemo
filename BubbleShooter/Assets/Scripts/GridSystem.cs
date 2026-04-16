@@ -298,10 +298,8 @@ public class GridSystem : MonoBehaviour
         bubble.StopAndLock();
         bubble.isSnapped = true;
 
-        // assign grid state first
         grid[target] = bubble;
 
-        // then move visual
         bubble.transform.position = GridToWorld(target);
         bubble.gridPos = target;
 
@@ -372,9 +370,6 @@ public class GridSystem : MonoBehaviour
     {
         if (!grid.ContainsKey(center))
             return center;
-
-        // Bubble-shooter style: BFS through occupied cells to nearest free slot,
-        // then pick the one closest to the collision point.
         Queue<Vector2Int> q = new Queue<Vector2Int>();
         Dictionary<Vector2Int, int> depth = new Dictionary<Vector2Int, int>();
         HashSet<Vector2Int> visited = new HashSet<Vector2Int>();

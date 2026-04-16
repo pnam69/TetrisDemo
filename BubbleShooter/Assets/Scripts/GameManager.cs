@@ -76,7 +76,6 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        // don't re-find refs every frame; only find if null
         EnsureRefs();
         AutoBindUIReferences();
         int bubblesLeft = grid != null ? grid.grid.Count : 0;
@@ -125,7 +124,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Delay lose check to next frame so physics and removals settle
         pendingLoseCheck = true;
 
         SaveProgress();
@@ -225,7 +223,6 @@ public class GameManager : MonoBehaviour
 
         int shooterRow = grid.WorldToGrid(refPos).y;
 
-        // Normal bubble-shooter behavior: lose when bubbles reach a row above shooter.
         return shooterRow + Mathf.Max(0, loseRowsAboveShooter);
     }
 
@@ -304,14 +301,12 @@ public class GameManager : MonoBehaviour
         pendingLoseCheck = false;
         UpdateUI();
 
-        // force UI text to reflect the reset immediately
         if (scoreText != null) scoreText.text = "Score: 0";
         if (levelText != null) levelText.text = "Level: " + level;
         if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + (grid != null ? grid.grid.Count : 0);
         if (victoryPanel != null) victoryPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         
-        // ensure shooter has a launcher bubble after restart
         EnsureRefs();
         if (shooter != null)
         {
@@ -335,11 +330,11 @@ public class GameManager : MonoBehaviour
 
     public void ExitButton()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+    #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+    #else
+            Application.Quit();
+    #endif
     }
 
     public LineRenderer loseLine;

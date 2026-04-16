@@ -1,0 +1,27 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+
+# Visual Studio / Rider
+.vs/
+*.csproj
+*.sln.docstates
+*.user
+*.userprefs
+*.pidb
+*.svd
+
+# Copilot logs/snapshots
+.vs/CopilotSnapshots/
+**/CopilotSnapshots/
+**/*copilot*.log
+**/*Copilot*.log
+
+# OS / misc
+.DS_Store
+Thumbs.db
