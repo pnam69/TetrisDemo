@@ -32,7 +32,7 @@ public class Dinosaur : MonoBehaviour
     public LayerMask groundLayer;
 
     [Header("Slide")]
-    public float slideDuration = 0.5f;
+    public float slideDuration = 1.2f;
 
     private PlayerState currentState = PlayerState.Run;
 

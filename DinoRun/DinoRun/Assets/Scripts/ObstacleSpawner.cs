@@ -2,40 +2,54 @@ using UnityEngine;
 
 public class ObstacleSpawner : MonoBehaviour
 {
-    public GameObject obstaclePrefab;
-    public float spawnRate = 0.0f;
-    public float spawnX = 15f;
-    public float minY = 0f;
-    public float maxY = 9f;
+    public GameObject[] obstaclePrefabs;
+    public Transform spawnPoint;
+
+    public float minSpawnTime = 2f;
+    public float maxSpawnTime = 2.5f;
 
     private float timer;
-    private void Start()
+    private float nextSpawnTime;
+
+    void Start()
     {
-        spawnRate = Random.Range(2.2f, 3.2f);
+        SetNextSpawnTime();
     }
 
     void Update()
     {
+        if (GameManager.Instance == null) return;
+        if (!GameManager.Instance.gameStarted) return;
+        if (GameManager.Instance.isGameOver) return;
+
         timer += Time.deltaTime;
-        if(GameManager.Instance == null) return;
-        if(GameManager.Instance.isGameOver) return;
-        if(GameManager.Instance.gameStarted == false) return;
-        if (timer >= spawnRate)
+
+        if (timer >= nextSpawnTime)
         {
-            Spawn();
+            SpawnObstacle();
             timer = 0f;
+            SetNextSpawnTime();
         }
     }
 
-    void Spawn()
+    void SpawnObstacle()
     {
-        Vector3 pos = new Vector3(
-            spawnX,
+        int index = Random.Range(0, obstaclePrefabs.Length);
 
-            Random.Range(minY, maxY),
-            0
+        GameObject prefab = obstaclePrefabs[index];
+        Obstacle obstacleData = prefab.GetComponent<Obstacle>();
+
+        Vector3 spawnPos = new Vector3(
+            spawnPoint.position.x,
+            obstacleData.spawnY,
+            0f
         );
 
-        Instantiate(obstaclePrefab, pos, Quaternion.identity);
+        Instantiate(prefab, spawnPos, Quaternion.identity);
+    }
+
+    void SetNextSpawnTime()
+    {
+        nextSpawnTime = Random.Range(minSpawnTime, maxSpawnTime);
     }
 }

@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7944051874867367293}
   - component: {fileID: 7656070755320923197}
   m_Layer: 0
-  m_Name: Obstacle
+  m_Name: Obstacle 3
   m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -178,4 +178,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2802bb27bd5bc045b9cd983d8ecb9f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  spawnY: 1
+  spawnY: 3.5

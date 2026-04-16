@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 5310985008835621740}
   - component: {fileID: -2050582296548301682}
   - component: {fileID: 7944051874867367293}
-  - component: {fileID: 7656070755320923197}
+  - component: {fileID: -7103311011476859697}
   m_Layer: 0
-  m_Name: Obstacle
+  m_Name: Obstacle 2
   m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 24.9, y: -0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   destroyX: -15
---- !u!114 &7656070755320923197
+--- !u!114 &-7103311011476859697
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -177,5 +177,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2802bb27bd5bc045b9cd983d8ecb9f4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: '::'
+  m_EditorClassIdentifier: Assembly-CSharp::Obstacle
   spawnY: 1
