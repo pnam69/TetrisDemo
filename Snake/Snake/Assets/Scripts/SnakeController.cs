@@ -14,13 +14,14 @@ public class SnakeController : MonoBehaviour
 
     private List<Transform> bodySegments = new List<Transform>();
     private List<Vector3> previousPositions = new List<Vector3>();
-
+    private FoodSpawner foodSpawner;
     void Start()
     {
         for (int i = 0; i < startingBodySize; i++)
         {
             Grow();
         }
+        foodSpawner = FindObjectOfType<FoodSpawner>();
     }
 
     void Update()
@@ -85,5 +86,17 @@ public class SnakeController : MonoBehaviour
 
         GameObject newSegment = Instantiate(bodyPrefab, spawnPosition, Quaternion.identity);
         bodySegments.Add(newSegment.transform);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Food"))
+        {
+            Grow();
+            GameManager.Instance.AddScore(10);
+            Destroy(other.gameObject);
+            foodSpawner.RemoveFood();
+            foodSpawner.SpawnFood();
+        }
     }
 }
