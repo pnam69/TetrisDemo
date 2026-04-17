@@ -2,12 +2,14 @@ using UnityEngine;
 
 public class FoodSpawner : MonoBehaviour
 {
-    public GameObject foodPrefab;
-
-    public int minX = -8;
-    public int maxX = 8;
-    public int minY = -4;
-    public int maxY = 4;
+    public GameObject normalFoodPrefab;
+    public GameObject speedFoodPrefab;
+    public GameObject slowFoodPrefab;
+    public Transform snakeHead;
+    public int minX = -13;
+    public int maxX = 13;
+    public int minY = -7;
+    public int maxY = 7;
 
     private GameObject currentFood;
     void Start()
@@ -18,13 +20,28 @@ public class FoodSpawner : MonoBehaviour
     {
         if (currentFood != null) return;
 
-        Vector3 spawnPos = new Vector3(
-            Random.Range(minX, maxX + 1),
-            Random.Range(minY, maxY + 1),
-            0
-        );
+        Vector3 spawnPos;
 
-        currentFood = Instantiate(foodPrefab, spawnPos, Quaternion.identity);
+        do
+        {
+            spawnPos = new Vector3(
+                Random.Range(minX, maxX + 1),
+                Random.Range(minY, maxY + 1),
+                0
+            );
+        }
+        while (Physics2D.OverlapCircle(spawnPos, 0.1f) != null);
+
+        int randomType = Random.Range(0, 3);
+
+        GameObject prefabToSpawn = normalFoodPrefab;
+
+        if (randomType == 1)
+            prefabToSpawn = speedFoodPrefab;
+        else if (randomType == 2)
+            prefabToSpawn = slowFoodPrefab;
+
+        currentFood = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
     }
 
     public void RemoveFood()

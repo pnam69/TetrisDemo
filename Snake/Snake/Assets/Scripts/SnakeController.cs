@@ -4,7 +4,10 @@ using UnityEngine;
 public class SnakeController : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveInterval = 0.2f;
+    public float baseMoveInterval = 0.2f;
+    public float speedIncreasePerLevel = 0.015f;
+    private float temporarySpeedModifier = 0f;
+    public float moveInterval;
     private float moveTimer;
     private Vector2Int direction = Vector2Int.right;
 
@@ -15,6 +18,7 @@ public class SnakeController : MonoBehaviour
     private List<Transform> bodySegments = new List<Transform>();
     private List<Vector3> previousPositions = new List<Vector3>();
     private FoodSpawner foodSpawner;
+    
     void Start()
     {
         for (int i = 0; i < startingBodySize; i++)
@@ -25,6 +29,19 @@ public class SnakeController : MonoBehaviour
     }
 
     void Update()
+    {
+        if (!GameManager.Instance.isStarted || GameManager.Instance.isGameOver) return;
+
+        HandleInput();
+        moveTimer += Time.deltaTime;
+        if (moveTimer >= moveInterval)
+        {
+            moveTimer = 0f;
+            Move();
+        }
+    }
+
+    public void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
             SetDirection(Vector2Int.up);
@@ -37,13 +54,6 @@ public class SnakeController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
             SetDirection(Vector2Int.right);
-
-        moveTimer += Time.deltaTime;
-        if (moveTimer >= moveInterval)
-        {
-            moveTimer = 0f;
-            Move();
-        }
     }
 
     public void SetDirection(Vector2Int newDirection)
@@ -55,7 +65,13 @@ public class SnakeController : MonoBehaviour
 
         direction = newDirection;
     }
+    public void UpdateSpeed()
+    {
+        moveInterval = baseMoveInterval - (GameManager.Instance.level - 1) * speedIncreasePerLevel + temporarySpeedModifier;
 
+        if (moveInterval < 0.05f)
+            moveInterval = 0.05f;
+    }
     void Move()
     {
         previousPositions.Clear();
@@ -92,11 +108,37 @@ public class SnakeController : MonoBehaviour
     {
         if (other.CompareTag("Food"))
         {
+            Food food = other.GetComponent<Food>();
+
             Grow();
-            GameManager.Instance.AddScore(10);
+
+            switch (food.foodType)
+            {
+                case FoodType.Normal:
+                    GameManager.Instance.AddScore(10);
+                    temporarySpeedModifier = 0f;
+                    break;
+
+                case FoodType.SpeedBoost:
+                    GameManager.Instance.AddScore(15);
+                    temporarySpeedModifier = -0.1f;
+                    break;
+
+                case FoodType.Slow:
+                    GameManager.Instance.AddScore(5);
+                    temporarySpeedModifier = 0.05f;
+                    break;
+            }
+
+            UpdateSpeed();
+
             Destroy(other.gameObject);
             foodSpawner.RemoveFood();
             foodSpawner.SpawnFood();
+        }
+        if (other.CompareTag("Wall") || other.CompareTag("Body") || other.CompareTag("Obstacle"))
+        {
+            GameManager.Instance.GameOver();
         }
     }
 }
