@@ -25,6 +25,27 @@ public class SnakeController : MonoBehaviour
         {
             Grow();
         }
+
+        int difficulty = PlayerPrefs.GetInt("Difficulty", 1);
+
+        switch (difficulty)
+        {
+            case 0:
+                baseMoveInterval = 0.25f;
+                break;
+
+            case 1:
+                baseMoveInterval = 0.18f;
+                break;
+
+            case 2:
+                baseMoveInterval = 0.14f;
+                break;
+        }
+
+        // Initialize moveInterval based on current settings
+        UpdateSpeed();
+
         foodSpawner = FindObjectOfType<FoodSpawner>();
     }
 
@@ -121,12 +142,12 @@ public class SnakeController : MonoBehaviour
 
                 case FoodType.SpeedBoost:
                     GameManager.Instance.AddScore(15);
-                    temporarySpeedModifier = -0.1f;
+                    temporarySpeedModifier = -0.03f;
                     break;
 
                 case FoodType.Slow:
                     GameManager.Instance.AddScore(5);
-                    temporarySpeedModifier = 0.05f;
+                    temporarySpeedModifier = 0.03f;
                     break;
             }
 

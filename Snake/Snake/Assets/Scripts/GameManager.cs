@@ -10,19 +10,33 @@ public class GameManager : MonoBehaviour
     public int score = 0;
     public int level = 1;
     public TMP_Text scoreText;
+    public TMP_Text highScoreText;
     public TMP_Text levelText;
     public GameObject gameOverPanel;
-    public GameObject startPanel;
+    public GameObject mainMenuPanel;
     public GameObject pausePanel;
+    public GameObject highScorePanel;
+    public GameObject gameHUDPanel;
+    public GameObject settingsPanel;
     public Button pauseButton;
+    public Toggle soundToggle;
+    public TMP_Dropdown difficultyDropdown;
     public bool isStarted = false;
+    public int highScore = 0;
     void Start()
     {
-        UpdateUI();
-        gameOverPanel.SetActive(false);
-        startPanel.SetActive(true);
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        difficultyDropdown.value = PlayerPrefs.GetInt("Difficulty", 1);
+        soundToggle.isOn = PlayerPrefs.GetInt("Sound", 1) == 1;
+        AudioListener.volume = soundToggle.isOn ? 1f : 0f;
+        mainMenuPanel.SetActive(true);
+        settingsPanel.SetActive(false);
+        highScorePanel.SetActive(false);
+        gameHUDPanel.SetActive(false);
         pausePanel.SetActive(false);
-        Time.timeScale = 0f; // Pause the game at the start
+        gameOverPanel.SetActive(false);
+
+        Time.timeScale = 0f;
     }
     void Awake()
     {
@@ -39,10 +53,43 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         isStarted = true;
-        startPanel.SetActive(false);
-        pausePanel.SetActive(false);
-        gameOverPanel.SetActive(false);
+        mainMenuPanel.SetActive(false);
+        gameHUDPanel.SetActive(true);
+
+        score = 0;
+        level = 1;
+        isGameOver = false;
+
+        UpdateUI();
+
         Time.timeScale = 1f;
+    }
+    public void OpenHighScore()
+    {
+        mainMenuPanel.SetActive(false);
+        highScorePanel.SetActive(true);
+
+        highScoreText.text = "High Score: " + highScore;
+    }
+    public void OpenSettings()
+    {
+        mainMenuPanel.SetActive(false);
+        settingsPanel.SetActive(true);
+    }
+    public void BackToMenu()
+    {
+        mainMenuPanel.SetActive(true);
+        settingsPanel.SetActive(false);
+        highScorePanel.SetActive(false);
+    }
+    public void SaveDifficulty()
+    {
+        PlayerPrefs.SetInt("Difficulty", difficultyDropdown.value);
+    }
+    public void SaveSound()
+    {
+        PlayerPrefs.SetInt("Sound", soundToggle.isOn ? 1 : 0);
+        AudioListener.volume = soundToggle.isOn ? 1f : 0f;
     }
     public void PauseGame()
     {
@@ -82,20 +129,30 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         isGameOver = true;
-        gameOverPanel.SetActive(true);
-        startPanel.SetActive(false);
-        pausePanel.SetActive(false);
 
+        if (score > highScore)
+        {
+            highScore = score;
+            PlayerPrefs.SetInt("HighScore", highScore);
+        }
+
+        gameOverPanel.SetActive(true);
         Time.timeScale = 0f;
     }
     public void RestartGame()
     {
-        Time.timeScale = 1f;
+        gameOverPanel.SetActive(false);
+
+        score = 0;
+        level = 1;
+        isGameOver = false;
+
+        UpdateUI();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Time.timeScale = 1f;
     }
     public void QuitGame()
     {
         Application.Quit();
     }
-
 }
