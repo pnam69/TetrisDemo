@@ -34,7 +34,7 @@ public class Dinosaur : MonoBehaviour
     [Header("Slide")]
     public float slideDuration = 1.2f;
 
-    private PlayerState currentState = PlayerState.Run;
+    private PlayerState currentState = PlayerState.Idle;
 
     private bool isGrounded;
     private bool jumpPressed;
@@ -45,6 +45,23 @@ public class Dinosaur : MonoBehaviour
 
     void Update()
     {
+        // If there's no GameManager or the game hasn't started yet, stay idle on the start screen
+        if (GameManager.Instance == null || !GameManager.Instance.gameStarted)
+        {
+            currentState = PlayerState.Idle;
+            UpdateAnimation();
+            return;
+        }
+
+        // If there's a UI start panel visible, keep the player idle (defensive for cases where gameStarted may already be true)
+        UIManager ui = Object.FindFirstObjectByType<UIManager>();
+        if (ui != null && ui.startPanel != null && ui.startPanel.activeInHierarchy)
+        {
+            currentState = PlayerState.Idle;
+            UpdateAnimation();
+            return;
+        }
+
         HandleInput();
         UpdateState();
         CheckGround();
@@ -124,7 +141,12 @@ public class Dinosaur : MonoBehaviour
     {
         if (currentState == PlayerState.Dead)
             return;
-
+        // If the game hasn't started yet, stay idle ? defensive guard
+        if (GameManager.Instance == null || !GameManager.Instance.gameStarted)
+        {
+            currentState = PlayerState.Idle;
+            return;
+        }
         if (slidePressed && isGrounded)
         {
             StartSlide();
