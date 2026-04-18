@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using UnityEngine;
 
-namespace Assets.Scripts
+[CreateAssetMenu(fileName = "LevelData", menuName = "MemoryMatch/Level")]
+public class LevelData : ScriptableObject
 {
-    internal class LevelData
-    {
-    }
+    public int pairCount;
+    public float timeLimit;
+    public int baseScore;
+    public float hintCooldown;
 }

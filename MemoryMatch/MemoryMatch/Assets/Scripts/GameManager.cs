@@ -13,6 +13,16 @@ public class GameManager : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text highScoreText;
     public TMP_Text levelText;
+    public TMP_Text hintText;
+    public float timeRemaining;
+    public TMP_Text timerText;
+    public int moveCount;
+    public TMP_Text moveText;
+    private float hintTimer = 0f;
+    public AudioSource audioSource;
+    public AudioClip flipSound;
+    public AudioClip matchSound;
+    public TMP_Text winText;
     public GameObject gameOverPanel;
     public GameObject winPanel;
     public GameObject mainMenuPanel;
@@ -23,15 +33,16 @@ public class GameManager : MonoBehaviour
     public Button pauseButton;
     public Toggle soundToggle;
     public TMP_Dropdown difficultyDropdown;
-    public GameObject cardPrefab;
-    public Transform boardParent;
-    private Card firstCard;
-    private Card secondCard;
-    private int matchedPairs = 0;
-    private bool canSelect = true;
+    public BoardManager boardManager;
+    public LevelManager levelManager;
     public bool isStarted = false;
     public int highScore = 0;
 
+    [Header("Level Settings")]
+    public int pairCount = 4;
+    public float timeLimit = 60f;
+    public int baseScore = 100;
+    public float hintCooldown = 5f;
     void Start()
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
@@ -44,8 +55,13 @@ public class GameManager : MonoBehaviour
         gameHUDPanel.SetActive(false);
         pausePanel.SetActive(false);
         gameOverPanel.SetActive(false);
-        GenerateBoard();
-        Time.timeScale = 0f;
+        if (winPanel != null) winPanel.SetActive(false);
+        if (boardManager != null)
+            boardManager.boardParent.gameObject.SetActive(false);
+        if (levelManager != null)
+            levelManager.ResetLevels();
+
+        Time.timeScale = 1f;
     }
     void Awake()
     {
@@ -53,6 +69,27 @@ public class GameManager : MonoBehaviour
     }
     private void Update()
     {
+        if (!isStarted || isGameOver) return;
+
+        // timer
+        timeRemaining -= Time.deltaTime;
+        if (timeRemaining <= 0f)
+        {
+            GameOver();
+        }
+
+        // hint cooldown
+        if (levelManager != null && boardManager != null)
+        {
+            LevelData lvl = levelManager.GetCurrentLevel();
+            if (lvl != null)
+            {
+                // nothing else here - hint timer in board
+            }
+        }
+
+        if (timerText != null) timerText.text = Mathf.Ceil(timeRemaining).ToString();
+
         if (isGameOver && Input.GetKeyDown(KeyCode.R))
         {
             RestartGame();
@@ -61,14 +98,29 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         isStarted = true;
+        
         mainMenuPanel.SetActive(false);
         gameHUDPanel.SetActive(true);
-
+        pausePanel.SetActive(false);
+        gameOverPanel.SetActive(false);
+        if (winPanel != null) winPanel.SetActive(false);
+        if (levelManager != null)
+            levelManager.ResetLevels();
+        LevelData lvl = levelManager.GetCurrentLevel();
+        level = 1;
+        timeRemaining = lvl.timeLimit;
+        hintTimer = 0f;
+        moveCount = 0;
         score = 0;
         level = 1;
-        isGameOver = false;
-        matchedPairs = 0;
 
+        isGameOver = false;
+        if (boardManager != null)
+        {
+            boardManager.boardParent.gameObject.SetActive(true);
+            boardManager.ResetBoard();
+            boardManager.GenerateBoard();
+        }
         UpdateUI();
 
         Time.timeScale = 1f;
@@ -88,8 +140,16 @@ public class GameManager : MonoBehaviour
     public void BackToMenu()
     {
         mainMenuPanel.SetActive(true);
+        gameHUDPanel.SetActive(false);
+        pausePanel.SetActive(false);
+        gameOverPanel.SetActive(false);
+        if (winPanel != null) winPanel.SetActive(false);
         settingsPanel.SetActive(false);
         highScorePanel.SetActive(false);
+        if (boardManager != null)
+            boardManager.boardParent.gameObject.SetActive(false);
+        isStarted = false;
+        Time.timeScale = 0f;
     }
     public void SaveDifficulty()
     {
@@ -102,11 +162,13 @@ public class GameManager : MonoBehaviour
     }
     public void PauseGame()
     {
+        if (!isStarted || isGameOver) return;
         Time.timeScale = 0f;
         pausePanel.SetActive(true);
     }
     public void ResumeGame()
     {
+        if (!isStarted || isGameOver) return;
         Time.timeScale = 1f;
         pausePanel.SetActive(false);
     }
@@ -120,6 +182,9 @@ public class GameManager : MonoBehaviour
     {
         scoreText.text = "Score: " + score;
         levelText.text = "Level: " + level;
+        if (moveText != null) moveText.text = "Moves: " + moveCount;
+        if (hintText != null) hintText.text = "Hint CD: " + Mathf.Ceil(hintTimer) + "s";
+        if (timerText != null) timerText.text = "Time: " + Mathf.Ceil(timeRemaining) + "s";
     }
     public void NextLevel()
     {
@@ -136,6 +201,7 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         isGameOver = true;
+        isStarted = false;
 
         if (score > highScore)
         {
@@ -149,11 +215,14 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         gameOverPanel.SetActive(false);
+        if (winPanel != null) winPanel.SetActive(false);
+        pausePanel.SetActive(false);
 
         score = 0;
         level = 1;
         isGameOver = false;
-        matchedPairs = 0;
+        isStarted = false;
+        if (boardManager != null) boardManager.ResetBoard();
 
         UpdateUI();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -164,80 +233,108 @@ public class GameManager : MonoBehaviour
         Application.Quit();
     }
 
+    //public void WinGame()
+    //{
+    //    Debug.Log("YOU WIN");
+    //    isStarted = false;
+
+    //    if (winPanel != null)
+    //    {
+    //        winPanel.SetActive(true);
+    //        //Time.timeScale = 0f;
+    //    }
+    //    if (boardManager != null)
+    //        boardManager.boardParent.gameObject.SetActive(false);
+    //}
     public void WinGame()
     {
-        Debug.Log("YOU WIN");
+        Debug.Log("LEVEL COMPLETE");
+
+        isStarted = false;
+        Time.timeScale = 0f;
 
         if (winPanel != null)
-        {
             winPanel.SetActive(true);
-            Time.timeScale = 0f;
+        if (winText != null)
+        {
+            winText.text = "Score: " + score + "\nMoves: " + moveCount + "\nTime Left: " + Mathf.Ceil(timeRemaining);
         }
     }
 
-    void GenerateBoard()
+    public void PlayFlip()
     {
-        List<int> cardIDs = new List<int>() { 0, 0, 1, 1 };
-
-        for (int i = 0; i < cardIDs.Count; i++)
-        {
-            int randomIndex = Random.Range(i, cardIDs.Count);
-            int temp = cardIDs[i];
-            cardIDs[i] = cardIDs[randomIndex];
-            cardIDs[randomIndex] = temp;
-        }
-
-        foreach (int id in cardIDs)
-        {
-            GameObject cardObj = Instantiate(cardPrefab, boardParent);
-            Card card = cardObj.GetComponent<Card>();
-            card.cardID = id;
-        }
+        if (audioSource != null && flipSound != null)
+            audioSource.PlayOneShot(flipSound);
     }
+
+    public void PlayMatch()
+    {
+        if (audioSource != null && matchSound != null)
+            audioSource.PlayOneShot(matchSound);
+    }
+    public void NextRound()
+    {
+        if (winPanel != null)
+            winPanel.SetActive(false);
+
+        bool hasNextLevel = false;
+
+        if (levelManager != null)
+            hasNextLevel = levelManager.NextLevel();
+
+        if (!hasNextLevel)
+        {
+            Debug.Log("ALL LEVELS COMPLETED!");
+            MainMenuAfterFinish();
+            return;
+        }
+
+        LevelData lvl = levelManager.GetCurrentLevel();
+
+        level = levelManager.currentLevel + 1;
+        timeRemaining = lvl.timeLimit;
+        moveCount = 0;
+
+        if (boardManager != null)
+        {
+            boardManager.ResetBoard();
+            boardManager.GenerateBoard();
+        }
+
+        UpdateUI();
+
+        isStarted = true;
+        Time.timeScale = 1f;
+    }
+    private void MainMenuAfterFinish()
+    {
+        if (boardManager != null)
+            boardManager.boardParent.gameObject.SetActive(false);
+
+        mainMenuPanel.SetActive(true);
+        gameHUDPanel.SetActive(false);
+
+        Time.timeScale = 1f;
+    }
+    // Forward selection API to BoardManager when available
     public void CardSelected(Card card)
     {
-        if (!canSelect) return;
-        if (firstCard == null)
-        {
-            firstCard = card;
-        }
-        else if (secondCard == null)
-        {
-            secondCard = card;
-            StartCoroutine(CheckMatch());
-        }
+        if (boardManager != null)
+            boardManager.CardSelected(card);
     }
-    private IEnumerator CheckMatch()
-    {
-        canSelect = false;
 
-        yield return new WaitForSeconds(0.5f);
-
-        if (firstCard.cardID == secondCard.cardID)
-        {
-            firstCard.Match();
-            secondCard.Match();
-
-            matchedPairs++;
-
-            if (matchedPairs >= boardParent.childCount / 2)
-            {
-                WinGame();
-            }
-        }
-        else
-        {
-            firstCard.Hide();
-            secondCard.Hide();
-        }
-
-        firstCard = null;
-        secondCard = null;
-
-        canSelect = true;
-    }
     public bool CanSelect()
     {
-        return canSelect;
+        if (!isStarted || isGameOver)
+            return false;
+
+        return boardManager != null ? boardManager.CanSelect() : false;
+    }
+    public void UseHint()
+    {
+        if (!isStarted || isGameOver) return;
+
+        if (boardManager != null)
+            boardManager.TryUseHint();
     }
 }
