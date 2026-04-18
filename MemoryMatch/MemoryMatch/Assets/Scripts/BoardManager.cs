@@ -14,7 +14,6 @@ public class BoardManager : MonoBehaviour
     private int matchedPairs = 0;
     private bool canSelect = true;
     private int combo = 0;
-    private float hintTimer = 0f;
     private float currentHintCooldown = 0f;
     [SerializeField] private GridLayoutGroup grid;
     private void Update()
