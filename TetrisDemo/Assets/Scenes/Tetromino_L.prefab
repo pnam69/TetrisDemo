@@ -96,6 +96,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -1536914372969001735, guid: 1b8f3034f94e8b044be63efbb27de1db, type: 3}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square
@@ -157,6 +173,22 @@ PrefabInstance:
     - target: {fileID: 1711244288339365206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -1536914372969001735, guid: 1b8f3034f94e8b044be63efbb27de1db, type: 3}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
@@ -220,6 +252,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -1536914372969001735, guid: 1b8f3034f94e8b044be63efbb27de1db, type: 3}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (2)
@@ -281,6 +329,26 @@ PrefabInstance:
     - target: {fileID: 1711244288339365206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -1536914372969001735, guid: 1b8f3034f94e8b044be63efbb27de1db, type: 3}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name

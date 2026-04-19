@@ -96,6 +96,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 3356406395973183004, guid: e65fae3546e06cb49b35457934957cc2, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square
@@ -158,6 +162,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 3356406395973183004, guid: e65fae3546e06cb49b35457934957cc2, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (2)
@@ -220,6 +228,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 3356406395973183004, guid: e65fae3546e06cb49b35457934957cc2, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (1)
@@ -282,6 +294,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 3356406395973183004, guid: e65fae3546e06cb49b35457934957cc2, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (3)

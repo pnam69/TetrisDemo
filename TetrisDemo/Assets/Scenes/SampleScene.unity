@@ -574,12 +574,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   tetrominoes:
   - {fileID: 5815525439046736028, guid: 267eeeac2e415f44cada7c5d3ea0141a, type: 3}
-  - {fileID: 4211644302484354608, guid: fb42c952a901d9c45ae6336c975e40e2, type: 3}
-  - {fileID: 1820681026268426280, guid: bfc813674839e3e4498278ab77fd0f27, type: 3}
   - {fileID: 784170322031889050, guid: 094e289afbdd79f438a188b44253237e, type: 3}
-  - {fileID: 3232273733419946600, guid: e02232f32034c194e817ac2e29386910, type: 3}
   - {fileID: 4298020661894684781, guid: b47930e992dc22d41ba497066a5ab1ee, type: 3}
+  - {fileID: 3232273733419946600, guid: e02232f32034c194e817ac2e29386910, type: 3}
   - {fileID: 2151956956190517623, guid: fbc6b3e0044f65b4798146724be2a8cc, type: 3}
+  - {fileID: 1820681026268426280, guid: bfc813674839e3e4498278ab77fd0f27, type: 3}
+  - {fileID: 4211644302484354608, guid: fb42c952a901d9c45ae6336c975e40e2, type: 3}
   spawnPoint: {fileID: 757284771}
   previewSlots:
   - {fileID: 1931405987}
@@ -602,8 +602,8 @@ MonoBehaviour:
   - {r: 0.3, g: 0.51, b: 0.98, a: 1}
   score: 0
   scoreText: {fileID: 528413342}
-  linesText: {fileID: 0}
-  levelText: {fileID: 0}
+  linesText: {fileID: 1691016909}
+  levelText: {fileID: 809329608}
   nextPieceText: {fileID: 0}
   baseFallTime: 1
   minFallTime: 0.1
@@ -931,7 +931,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -167, y: 68}
+  m_AnchoredPosition: {x: -167, y: 75}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &528413342
@@ -967,9 +967,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Score:
-
-'
+  m_Text: 'Score:'
 --- !u!222 &528413343
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1009,6 +1007,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 528413341}
+  - {fileID: 809329610}
+  - {fileID: 1691016911}
   m_Father: {fileID: 56140558}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1192,6 +1192,85 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5774712748295837855, guid: 02f4f2e8c24d4cb4f9b31cb2a8c9c748, type: 3}
   m_PrefabInstance: {fileID: 7469208837190185591}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &809329607
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 809329610}
+  - component: {fileID: 809329609}
+  - component: {fileID: 809329608}
+  m_Layer: 5
+  m_Name: Text (Legacy) (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &809329608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809329607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 16
+    m_FontStyle: 1
+    m_BestFit: 0
+    m_MinSize: 0
+    m_MaxSize: 70
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 'Level:'
+--- !u!222 &809329609
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809329607}
+  m_CullTransparentMesh: 1
+--- !u!224 &809329610
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809329607}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 537568342}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -167, y: 45}
+  m_SizeDelta: {x: 160, y: 30}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &809601663
 GameObject:
   m_ObjectHideFlags: 0
@@ -2034,6 +2113,85 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1685232638}
   m_CullTransparentMesh: 1
+--- !u!1 &1691016908
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1691016911}
+  - component: {fileID: 1691016910}
+  - component: {fileID: 1691016909}
+  m_Layer: 5
+  m_Name: Text (Legacy) (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1691016909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1691016908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 16
+    m_FontStyle: 1
+    m_BestFit: 0
+    m_MinSize: 0
+    m_MaxSize: 70
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 'Lines:'
+--- !u!222 &1691016910
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1691016908}
+  m_CullTransparentMesh: 1
+--- !u!224 &1691016911
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1691016908}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 537568342}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -167, y: 13}
+  m_SizeDelta: {x: 160, y: 30}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1704673997
 GameObject:
   m_ObjectHideFlags: 0
@@ -2235,16 +2393,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   bgmSource: {fileID: 0}
   sfxSource: {fileID: 0}
-  bgmClip: {fileID: 0}
-  lineClearClip: {fileID: 0}
+  bgmClip: {fileID: 8300000, guid: 8521c8212582a1644a00868ded8df38c, type: 3}
+  menuBgmClip: {fileID: 8300000, guid: b1cb52319fc1053469833197c4aade6a, type: 3}
+  gameBgmClip: {fileID: 8300000, guid: d72c67da8d8f611499ef46260a6657bd, type: 3}
+  lineClearClip: {fileID: 8300000, guid: 06bf4f9b83ba3e64c86175500faa6125, type: 3}
   tSpinClip: {fileID: 0}
-  tetrisClip: {fileID: 0}
-  dropClip: {fileID: 0}
+  tetrisClip: {fileID: 8300000, guid: 8bacf002f1e87a44cbfd24c268c12b56, type: 3}
+  dropClip: {fileID: 8300000, guid: a3765e1855518114a8dacd14487bf7c4, type: 3}
   lockClip: {fileID: 0}
-  rotateClip: {fileID: 0}
+  rotateClip: {fileID: 8300000, guid: 8bacf002f1e87a44cbfd24c268c12b56, type: 3}
   moveClip: {fileID: 0}
-  holdClip: {fileID: 0}
-  gameOverClip: {fileID: 0}
+  holdClip: {fileID: 8300000, guid: dd75893d323214247b12782fd0b5912e, type: 3}
+  gameOverClip: {fileID: 8300000, guid: 8b2453cd4b1cbdf49a28b1ad7e59a329, type: 3}
+  uiClickClip: {fileID: 8300000, guid: 0fd1bf5dbf67ba4418f933d112725cd5, type: 3}
   bgmVolume: 0.6
   sfxVolume: 1
 --- !u!4 &1933260092

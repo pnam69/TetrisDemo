@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
         new Color(0.66f, 0.51f, 0.95f),
         new Color(0.35f, 0.90f, 0.43f),
         new Color(0.97f, 0.34f, 0.34f),
-        new Color(0.97f, 0.58f, 0.22f),
+        new Color(0.9568628f, 0.5372549f, 0.9568628f),
         new Color(0.30f, 0.51f, 0.98f)
     };
 
@@ -60,6 +60,8 @@ public class GameManager : MonoBehaviour
         SetGameOverUIState(false);
 
         ApplyVisualTheme();
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayMenuMusic();
     }
 
     public void StartGame()
@@ -67,6 +69,8 @@ public class GameManager : MonoBehaviour
         mainMenuUI.SetActive(false);
         gameUI.SetActive(true);
         ResetAndStartRun();
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayGameMusic();
     }
     public void QuitGame()
     {
@@ -102,7 +106,6 @@ public class GameManager : MonoBehaviour
     void SpawnPiece(int index)
     {
         GameObject piece = Instantiate(tetrominoes[index], spawnPoint.position, Quaternion.identity);
-        ApplyThemeToPiece(piece, index);
 
         Tetromino tetromino = piece.GetComponent<Tetromino>();
         if (tetromino != null)
@@ -310,16 +313,7 @@ public class GameManager : MonoBehaviour
 
     void ApplyThemeToPiece(GameObject piece, int index)
     {
-        if (!useThemeColors || piece == null) return;
-
-        Color color = GetPieceColor(index);
-
-        foreach (Transform block in piece.transform)
-        {
-            SpriteRenderer spriteRenderer = block.GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
-                spriteRenderer.color = color;
-        }
+        // function intentionally left empty - miniblocks handle preview coloring
     }
 
     Color GetPieceColor(int index)
@@ -367,6 +361,8 @@ public class GameManager : MonoBehaviour
         mainMenuUI.SetActive(false);
         gameUI.SetActive(true);
         ResetAndStartRun();
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayGameMusic();
     }
 
     public bool TryHoldPiece(Tetromino currentPiece)

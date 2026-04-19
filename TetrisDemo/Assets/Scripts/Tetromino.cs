@@ -304,8 +304,10 @@ public class Tetromino : MonoBehaviour
             if (spriteRenderer != null)
             {
                 Color c = spriteRenderer.color;
-                spriteRenderer.color = new Color(c.r, c.g, c.b, 0.22f);
-                spriteRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
+                c.a = 0.25f;
+                spriteRenderer.color = c;
+
+                spriteRenderer.sortingOrder -= 1;
             }
         }
     }

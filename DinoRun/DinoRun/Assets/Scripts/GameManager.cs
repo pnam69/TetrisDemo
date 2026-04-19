@@ -6,15 +6,35 @@ public class GameManager : MonoBehaviour
 
     public float worldSpeed = 5f;
     public float speedIncrease = 0.1f;
-
     public float score = 0f;
 
     public bool gameStarted = false;
     public bool isGameOver = false;
 
+    [Header("Day/Night")]
+    public Camera mainCamera;
+    public Color dayColor = new Color(0.53f, 0.81f, 0.92f, 1f);
+    public Color nightColor = new Color(0.08f, 0.08f, 0.16f, 1f);
+    public float dayNightCycleDuration = 20f;
+
+    private float dayNightTimer;
+
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
+
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        ApplyDayNightColor();
     }
 
     void Update()
@@ -23,11 +43,14 @@ public class GameManager : MonoBehaviour
 
         worldSpeed += speedIncrease * Time.deltaTime;
         score += Time.deltaTime * 10f;
+        dayNightTimer += Time.deltaTime;
+        ApplyDayNightColor();
     }
 
     public void StartGame()
     {
         gameStarted = true;
+        isGameOver = false;
     }
 
     public void GameOver()
@@ -35,30 +58,14 @@ public class GameManager : MonoBehaviour
         isGameOver = true;
     }
 
-    public void SetResolving(bool value)
+    private void ApplyDayNightColor()
     {
-        resolving = value;
-    }
-
-    void EnsureRefs()
-    {
-        // Use the newer Object API to avoid obsolete FindObjectOfType warnings in newer Unity versions
-        if (grid == null) grid = Object.FindFirstObjectByType<GridSystem>();
-        if (shooter == null) shooter = Object.FindFirstObjectByType<Shooter>();
-    }
-
-    void AutoBindUIReferences()
-    {
-        if (scoreText == null) scoreText = FindTMPByName("ScoreText");
-        if (levelText == null) levelText = FindTMPByName("LevelText");
-        if (shotsText == null) shotsText = FindTMPByName("ShotText") ?? FindTMPByName("ShotsText");
-
-        if (victoryPanel == null) victoryPanel = FindObjectByName("WinPanel") ?? FindObjectByName("VictoryPanel");
-        if (gameOverPanel == null) gameOverPanel = FindObjectByName("GameOverPanel");
-        if (loseLine == null)
+        if (mainCamera == null || dayNightCycleDuration <= 0f)
         {
-            GameObject lineGo = FindObjectByName("LoseLine") ?? FindObjectByName("Lose Line");
-            if (lineGo != null) loseLine = lineGo.GetComponent<LineRenderer>();
+            return;
         }
+
+        float t = Mathf.PingPong(dayNightTimer / dayNightCycleDuration, 1f);
+        mainCamera.backgroundColor = Color.Lerp(dayColor, nightColor, t);
     }
 }

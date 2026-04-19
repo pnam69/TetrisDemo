@@ -20,6 +20,8 @@ public class GameManager : MonoBehaviour
     public GameObject settingsPanel;
     public Button pauseButton;
     public Toggle soundToggle;
+    public AudioSource bgmSource;
+    public AudioSource sfxSource;
     public TMP_Dropdown difficultyDropdown;
     public bool isStarted = false;
     public int highScore = 0;
@@ -28,7 +30,19 @@ public class GameManager : MonoBehaviour
         highScore = PlayerPrefs.GetInt("HighScore", 0);
         difficultyDropdown.value = PlayerPrefs.GetInt("Difficulty", 1);
         soundToggle.isOn = PlayerPrefs.GetInt("Sound", 1) == 1;
-        AudioListener.volume = soundToggle.isOn ? 1f : 0f;
+        // wire audio sources and restore mute state
+        if (AudioManager.Instance != null)
+        {
+            if (bgmSource != null) AudioManager.Instance.bgmSource = bgmSource;
+            if (sfxSource != null) AudioManager.Instance.sfxSource = sfxSource;
+            // only forward audio sources and mute state; clips should be assigned on AudioManager
+            AudioManager.Instance.SetMuted(!soundToggle.isOn);
+            AudioManager.Instance.PlayBgm();
+        }
+        else
+        {
+            AudioListener.volume = soundToggle.isOn ? 1f : 0f;
+        }
         mainMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
         highScorePanel.SetActive(false);
@@ -41,7 +55,7 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        obstacleManager = FindObjectOfType<ObstacleManager>();
+        obstacleManager = Object.FindFirstObjectByType<ObstacleManager>();
     }
     private void Update()
     {
@@ -62,6 +76,9 @@ public class GameManager : MonoBehaviour
 
         UpdateUI();
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayBgm();
+
         Time.timeScale = 1f;
     }
     public void OpenHighScore()
@@ -75,12 +92,14 @@ public class GameManager : MonoBehaviour
     {
         mainMenuPanel.SetActive(false);
         settingsPanel.SetActive(true);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI();
     }
     public void BackToMenu()
     {
         mainMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
         highScorePanel.SetActive(false);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI();
     }
     public void SaveDifficulty()
     {
@@ -89,17 +108,27 @@ public class GameManager : MonoBehaviour
     public void SaveSound()
     {
         PlayerPrefs.SetInt("Sound", soundToggle.isOn ? 1 : 0);
-        AudioListener.volume = soundToggle.isOn ? 1f : 0f;
+        PlayerPrefs.Save();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetMuted(!soundToggle.isOn);
+        }
+        else
+        {
+            AudioListener.volume = soundToggle.isOn ? 1f : 0f;
+        }
     }
     public void PauseGame()
     {
         Time.timeScale = 0f;
         pausePanel.SetActive(true);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI();
     }
     public void ResumeGame()
     {
         Time.timeScale = 1f;
         pausePanel.SetActive(false);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUI();
     }
     public void AddScore(int amount)
     {
@@ -119,8 +148,9 @@ public class GameManager : MonoBehaviour
         if (newLevel > level)
         {
             level = newLevel;
-            FindObjectOfType<SnakeController>().UpdateSpeed();
-            obstacleManager.SpawnObstacle();
+            Object.FindFirstObjectByType<SnakeController>().UpdateSpeed();
+            if (obstacleManager != null) obstacleManager.SpawnObstacle();
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayLevelUp();
             Debug.Log("Level Up! " + level);
         }
     }
@@ -138,6 +168,12 @@ public class GameManager : MonoBehaviour
 
         gameOverPanel.SetActive(true);
         Time.timeScale = 0f;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayGameOverSfx();
+            AudioManager.Instance.CrossfadeBGM(null, 0.6f);
+        }
     }
     public void RestartGame()
     {

@@ -10,6 +10,7 @@ public class SnakeController : MonoBehaviour
     public float moveInterval;
     private float moveTimer;
     private Vector2Int direction = Vector2Int.right;
+    private bool directionChangedThisStep = false;
 
     [Header("Body")]
     public GameObject bodyPrefab;
@@ -46,7 +47,7 @@ public class SnakeController : MonoBehaviour
         // Initialize moveInterval based on current settings
         UpdateSpeed();
 
-        foodSpawner = FindObjectOfType<FoodSpawner>();
+        foodSpawner = Object.FindFirstObjectByType<FoodSpawner>();
     }
 
     void Update()
@@ -79,12 +80,25 @@ public class SnakeController : MonoBehaviour
 
     public void SetDirection(Vector2Int newDirection)
     {
+        // Prevent processing multiple direction changes between moves
+        if (directionChangedThisStep) return;
+
+        // Prevent direct 180-degree opposite direction
         if (newDirection == Vector2Int.up && direction == Vector2Int.down) return;
         if (newDirection == Vector2Int.down && direction == Vector2Int.up) return;
         if (newDirection == Vector2Int.left && direction == Vector2Int.right) return;
         if (newDirection == Vector2Int.right && direction == Vector2Int.left) return;
 
+        // Prevent turning into the first body segment (instant self-bite)
+        if (bodySegments.Count > 0)
+        {
+            Vector3 nextPos = transform.position + new Vector3(newDirection.x, newDirection.y, 0);
+            if (bodySegments[0].position == nextPos)
+                return;
+        }
+
         direction = newDirection;
+        directionChangedThisStep = true;
     }
     public void UpdateSpeed()
     {
@@ -110,6 +124,9 @@ public class SnakeController : MonoBehaviour
         {
             bodySegments[i].position = previousPositions[i];
         }
+
+        // allow direction changes again after the snake has moved
+        directionChangedThisStep = false;
     }
 
     public void Grow()
@@ -130,22 +147,26 @@ public class SnakeController : MonoBehaviour
         if (other.CompareTag("Food"))
         {
             Food food = other.GetComponent<Food>();
+            FoodType eatenType = food != null ? food.foodType : FoodType.Normal;
 
             Grow();
 
-            switch (food.foodType)
+            switch (eatenType)
             {
                 case FoodType.Normal:
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Normal);
                     GameManager.Instance.AddScore(10);
                     temporarySpeedModifier = 0f;
                     break;
 
                 case FoodType.SpeedBoost:
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.SpeedBoost);
                     GameManager.Instance.AddScore(15);
                     temporarySpeedModifier = -0.03f;
                     break;
 
                 case FoodType.Slow:
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Slow);
                     GameManager.Instance.AddScore(5);
                     temporarySpeedModifier = 0.03f;
                     break;

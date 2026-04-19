@@ -25,6 +25,8 @@ public class Dinosaur : MonoBehaviour
     public float fallMultiplier = 4.0f;
     public float lowJumpMultiplier = 2f;
     public float maxJumpHoldTime = 0.2f;
+    public bool enableDoubleJump = false;
+    public int maxJumpCount = 2;
     private float jumpHoldTimer;
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -40,6 +42,7 @@ public class Dinosaur : MonoBehaviour
     private bool jumpPressed;
     private bool jumpHeld;
     private bool slidePressed;
+    private int jumpCount;
 
     private float slideTimer;
 
@@ -153,7 +156,8 @@ public class Dinosaur : MonoBehaviour
             return;
         }
 
-        if (jumpPressed && isGrounded)
+        bool canAirJump = enableDoubleJump && jumpCount < maxJumpCount;
+        if (jumpPressed && (isGrounded || canAirJump))
         {
             Jump();
             return;
@@ -179,6 +183,7 @@ public class Dinosaur : MonoBehaviour
     // ---------------- ACTIONS ----------------
     void Jump()
     {
+        jumpCount++;
         rb.linearVelocity = new Vector2(0, jumpForce);
         jumpHoldTimer = maxJumpHoldTime;
         currentState = PlayerState.Jump;
@@ -242,12 +247,29 @@ public class Dinosaur : MonoBehaviour
 
     void CheckGround()
     {
-        Collider2D hit = Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius
-        );
+        Collider2D hit;
+
+        if (groundLayer.value == 0)
+        {
+            hit = Physics2D.OverlapCircle(
+                groundCheck.position,
+                groundCheckRadius
+            );
+        }
+        else
+        {
+            hit = Physics2D.OverlapCircle(
+                groundCheck.position,
+                groundCheckRadius,
+                groundLayer
+            );
+        }
 
         isGrounded = hit != null;
+        if (isGrounded)
+        {
+            jumpCount = 0;
+        }
 
     }
 

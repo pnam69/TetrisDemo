@@ -96,6 +96,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4027971289221615466, guid: 3961e88e39da11e4f85be79f173ea968, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (1)
@@ -158,6 +162,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4027971289221615466, guid: 3961e88e39da11e4f85be79f173ea968, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (3)
@@ -220,6 +228,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4027971289221615466, guid: 3961e88e39da11e4f85be79f173ea968, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square
@@ -282,6 +294,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2203413701689543206, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4027971289221615466, guid: 3961e88e39da11e4f85be79f173ea968, type: 3}
     - target: {fileID: 6853191281244113889, guid: 351efc30d202e114991dfe28d68714f3, type: 3}
       propertyPath: m_Name
       value: Square (2)

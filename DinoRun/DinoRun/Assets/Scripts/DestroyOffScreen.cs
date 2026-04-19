@@ -8,7 +8,15 @@ public class DestroyOffscreen : MonoBehaviour
     {
         if (transform.position.x < destroyX)
         {
-            Destroy(gameObject);
+            Obstacle obstacle = GetComponent<Obstacle>();
+            if (obstacle != null)
+            {
+                obstacle.Despawn();
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

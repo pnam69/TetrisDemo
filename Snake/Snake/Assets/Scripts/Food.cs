@@ -5,7 +5,7 @@ public class Food : MonoBehaviour
     public FoodType foodType;
     void Update()
     {
-        float scale = 8f + Mathf.Sin(Time.time * 5f) * 1.1f;
+        float scale = 3.5f + Mathf.Sin(Time.time * 5f) * 0.5f;
         transform.localScale = new Vector3(scale, scale, 8f);
     }
 }
