@@ -32,9 +32,18 @@ public class GridSystem : MonoBehaviour
     [Range(0.75f, 1f)] public float hexRowFactor = 0.866f;
     [Range(0f, 1f)] public float rowXOffset = 0.5f;
     [Range(2, 10)] public int defaultColorCount = 4;
+    [Header("Dynamic Difficulty")]
+    public bool autoScaleGeneratedLayoutByLevel = true;
+    public int rowsIncreaseEveryLevels = 2;
+    public int colorIncreaseEveryLevels = 3;
+    public int maxGeneratedRows = 10;
+    public int maxGeneratedColorCount = 6;
     public Color wallVisualColor = new Color(0.85f, 0.8f, 1f, 1.0f);
     public Color boardBackgroundColor = new Color(0.08f, 0.1f, 0.16f, 0.05f);
     private static Sprite whiteSprite;
+    private bool usingGeneratedLayout;
+    private int baseDefaultRows;
+    private int baseDefaultColorCount;
 
     public Dictionary<Vector2Int, Bubble> grid = new();
     public int TopRowThreshold
@@ -53,6 +62,9 @@ public class GridSystem : MonoBehaviour
 
     void Start()
     {
+        baseDefaultRows = defaultRows;
+        baseDefaultColorCount = defaultColorCount;
+
         if (bubbleColors == null || bubbleColors.Length == 0)
         {
             bubbleColors = new[] { Color.red, Color.green, Color.blue, Color.yellow };
@@ -60,7 +72,7 @@ public class GridSystem : MonoBehaviour
 
         if (bubblePrefab == null)
         {
-            Shooter shooter = FindObjectOfType<Shooter>();
+            Shooter shooter = Object.FindFirstObjectByType<Shooter>();
             if (shooter != null)
             {
                 bubblePrefab = shooter.bubblePrefab;
@@ -440,10 +452,19 @@ public class GridSystem : MonoBehaviour
             return;
         }
 
-        if (initialLayout == null || initialLayout.Count == 0)
+        if (initialLayout == null)
+            initialLayout = new List<LevelBubble>();
+
+        if (initialLayout.Count == 0)
+            usingGeneratedLayout = true;
+
+        if (usingGeneratedLayout)
         {
+            ApplyGeneratedLayoutDifficulty();
             BuildDefaultLayout();
         }
+
+        EnsureBoardVisual();
 
         foreach (KeyValuePair<Vector2Int, Bubble> kv in grid)
         {
@@ -486,6 +507,30 @@ public class GridSystem : MonoBehaviour
 
             grid[cell.position] = bubble;
         }
+    }
+
+    void ApplyGeneratedLayoutDifficulty()
+    {
+        if (!autoScaleGeneratedLayoutByLevel)
+        {
+            defaultRows = baseDefaultRows;
+            defaultColorCount = baseDefaultColorCount;
+            return;
+        }
+
+        int level = 1;
+        if (GameManager.Instance != null)
+            level = Mathf.Max(1, GameManager.Instance.level);
+
+        int rowsAdd = rowsIncreaseEveryLevels > 0 ? (level - 1) / rowsIncreaseEveryLevels : 0;
+        int colorsAdd = colorIncreaseEveryLevels > 0 ? (level - 1) / colorIncreaseEveryLevels : 0;
+
+        int colorCap = bubbleColors != null && bubbleColors.Length > 0
+            ? Mathf.Min(maxGeneratedColorCount, bubbleColors.Length)
+            : maxGeneratedColorCount;
+
+        defaultRows = Mathf.Clamp(baseDefaultRows + rowsAdd, 1, Mathf.Max(1, maxGeneratedRows));
+        defaultColorCount = Mathf.Clamp(baseDefaultColorCount + colorsAdd, 2, Mathf.Max(2, colorCap));
     }
 
     void BuildDefaultLayout()
@@ -564,7 +609,7 @@ public class GridSystem : MonoBehaviour
                 }
             }
 
-            int droppedCount = RemoveBubbles(floating);
+            int droppedCount = RemoveBubbles(floating, true);
             if (droppedCount > 0)
             {
                 AudioManager.Instance?.PlayDrop();
@@ -638,7 +683,7 @@ public class GridSystem : MonoBehaviour
         return anchored;
     }
 
-    private int RemoveBubbles(IEnumerable<Vector2Int> positions)
+    private int RemoveBubbles(IEnumerable<Vector2Int> positions, bool makeFall = false)
     {
         List<Vector2Int> toRemove = new();
         foreach (Vector2Int pos in positions)
@@ -656,7 +701,14 @@ public class GridSystem : MonoBehaviour
             grid.Remove(pos);
             if (bubble != null)
             {
-                Destroy(bubble.gameObject);
+                if (makeFall)
+                {
+                    bubble.DropAndFall();
+                }
+                else
+                {
+                    bubble.PopAndDestroy();
+                }
             }
         }
 

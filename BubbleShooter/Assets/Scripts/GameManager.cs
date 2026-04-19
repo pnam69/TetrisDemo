@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text levelText;
     public TMP_Text shotsText;
+    public TMP_Text nextText;
     public GameObject victoryPanel;
     public GameObject gameOverPanel;
 
@@ -83,6 +84,12 @@ public class GameManager : MonoBehaviour
         if (scoreText != null) scoreText.text = "Score: " + score;
         if (levelText != null) levelText.text = "Level: " + level;
         if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + bubblesLeft;
+        if (nextText != null && shooter != null)
+        {
+            int nextId = shooter.GetNextColorId();
+            nextText.text = "Next: " + (nextId + 1);
+            nextText.color = shooter.GetColorById(nextId);
+        }
         if (victoryPanel != null) victoryPanel.SetActive(isVictory);
         if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
     }
@@ -231,10 +238,15 @@ public class GameManager : MonoBehaviour
         resolving = value;
     }
 
+    public void OnNextBubbleChanged()
+    {
+        UpdateUI();
+    }
+
     void EnsureRefs()
     {
-        if (grid == null) grid = FindObjectOfType<GridSystem>();
-        if (shooter == null) shooter = FindObjectOfType<Shooter>();
+        if (grid == null) grid = Object.FindFirstObjectByType<GridSystem>();
+        if (shooter == null) shooter = Object.FindFirstObjectByType<Shooter>();
     }
 
     void AutoBindUIReferences()
@@ -242,6 +254,7 @@ public class GameManager : MonoBehaviour
         if (scoreText == null) scoreText = FindTMPByName("ScoreText");
         if (levelText == null) levelText = FindTMPByName("LevelText");
         if (shotsText == null) shotsText = FindTMPByName("ShotText") ?? FindTMPByName("ShotsText");
+        if (nextText == null) nextText = FindTMPByName("NextText") ?? FindTMPByName("NextBubbleText");
 
         if (victoryPanel == null) victoryPanel = FindObjectByName("WinPanel") ?? FindObjectByName("VictoryPanel");
         if (gameOverPanel == null) gameOverPanel = FindObjectByName("GameOverPanel");

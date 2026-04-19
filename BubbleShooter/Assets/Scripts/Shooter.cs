@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
 public class Shooter : MonoBehaviour
@@ -13,18 +12,16 @@ public class Shooter : MonoBehaviour
 
     private Bubble currentBubble;
     private bool canShoot = true;
-    private Vector2 touchStartPos;
-    private float touchStartTime;
-    const float tapMaxDuration = 0.25f;
-    const float tapMaxMove = 40f;
-    private bool isAiming = false;
-    private int activeFingerId = -1;
-    [SerializeField] private float pullSpeedFactor = 5f;
+    private int nextColorId = -1;
+    public LineRenderer trajectoryLine;
+    [SerializeField] private int trajectoryMaxBounces = 2;
+    [SerializeField] private float trajectoryMaxDistance = 25f;
+
     void Start()
     {
         if (bubblePrefab == null)
         {
-            GridSystem grid = FindObjectOfType<GridSystem>();
+            GridSystem grid = Object.FindFirstObjectByType<GridSystem>();
             if (grid != null)
             {
                 bubblePrefab = grid.bubblePrefab;
@@ -33,7 +30,7 @@ public class Shooter : MonoBehaviour
 
         if (bubbleColors == null || bubbleColors.Length == 0)
         {
-            GridSystem grid = FindObjectOfType<GridSystem>();
+            GridSystem grid = Object.FindFirstObjectByType<GridSystem>();
             if (grid != null && grid.bubbleColors != null && grid.bubbleColors.Length > 0)
             {
                 bubbleColors = grid.bubbleColors;
@@ -44,7 +41,82 @@ public class Shooter : MonoBehaviour
             }
         }
 
+        if (nextColorId < 0)
+            nextColorId = GetRandomColorId();
+        EnsureTrajectoryRef();
         SpawnBubble();
+    }
+
+    void EnsureTrajectoryRef()
+    {
+        if (trajectoryLine != null) return;
+        GameObject go = GameObject.Find("TrajectoryLine");
+        if (go == null)
+        {
+            go = new GameObject("TrajectoryLine");
+            go.transform.SetParent(transform, false);
+            LineRenderer lr = go.AddComponent<LineRenderer>();
+            lr.positionCount = 0;
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startWidth = 0.05f;
+            lr.endWidth = 0.05f;
+            lr.numCapVertices = 4;
+            trajectoryLine = lr;
+        }
+        else
+        {
+            trajectoryLine = go.GetComponent<LineRenderer>();
+            if (trajectoryLine == null) trajectoryLine = go.AddComponent<LineRenderer>();
+        }
+        if (trajectoryLine != null) trajectoryLine.enabled = false;
+    }
+
+    void UpdateTrajectoryPreview(Vector2 dir)
+    {
+        if (trajectoryLine == null || firePoint == null) return;
+
+        trajectoryLine.enabled = true;
+        float radius = 0.15f;
+        CircleCollider2D cc = currentBubble != null ? currentBubble.GetComponent<CircleCollider2D>() : null;
+        if (cc != null) radius = Mathf.Max(0.05f, cc.radius * Mathf.Abs(currentBubble.transform.lossyScale.x));
+
+        Vector3 origin = firePoint.position;
+        Vector2 d = dir.normalized;
+        float remain = trajectoryMaxDistance;
+
+        var points = new System.Collections.Generic.List<Vector3> { origin };
+
+        for (int i = 0; i <= trajectoryMaxBounces && remain > 0.01f; i++)
+        {
+            RaycastHit2D hit = Physics2D.CircleCast(origin, radius, d, remain);
+            if (!hit.collider)
+            {
+                points.Add(origin + (Vector3)(d * remain));
+                break;
+            }
+
+            points.Add(hit.point);
+
+            if (hit.collider.CompareTag("Wall"))
+            {
+                remain -= Vector2.Distance(origin, hit.point);
+                d = Vector2.Reflect(d, hit.normal).normalized;
+                origin = new Vector3(hit.point.x, hit.point.y, origin.z) + (Vector3)(d * 0.02f);
+                continue;
+            }
+
+            break;
+        }
+
+        trajectoryLine.positionCount = points.Count;
+        for (int i = 0; i < points.Count; i++) trajectoryLine.SetPosition(i, points[i]);
+    }
+
+    void HideTrajectory()
+    {
+        if (trajectoryLine == null) return;
+        trajectoryLine.enabled = false;
+        trajectoryLine.positionCount = 0;
     }
 
     public void ResetShooter()
@@ -55,18 +127,20 @@ public class Shooter : MonoBehaviour
             currentBubble = null;
         }
 
+        CancelInvoke(nameof(SpawnBubble));
+
         canShoot = true;
 
         if (bubblePrefab == null)
         {
-            GridSystem grid = FindObjectOfType<GridSystem>();
+            GridSystem grid = Object.FindFirstObjectByType<GridSystem>();
             if (grid != null)
                 bubblePrefab = grid.bubblePrefab;
         }
 
         if (bubbleColors == null || bubbleColors.Length == 0)
         {
-            GridSystem grid = FindObjectOfType<GridSystem>();
+            GridSystem grid = Object.FindFirstObjectByType<GridSystem>();
             if (grid != null && grid.bubbleColors != null && grid.bubbleColors.Length > 0)
             {
                 bubbleColors = grid.bubbleColors;
@@ -89,119 +163,74 @@ public class Shooter : MonoBehaviour
             return;
         }
 
-        if (Input.touchCount > 0)
+        Vector2 pointer;
+        if (TryGetAimPointer(out pointer))
         {
-            HandleTouchInput();
-            return;
+            AimAtScreenPoint(pointer);
+
+            // compute world direction and update trajectory preview
+            if (Camera.main != null && aimPivot != null)
+            {
+                Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(pointer.x, pointer.y, Mathf.Abs(Camera.main.transform.position.z)));
+                Vector2 dir = (world - aimPivot.position);
+                UpdateTrajectoryPreview(dir);
+            }
+        }
+        else
+        {
+            HideTrajectory();
+        }
+
+        if (WasShootPressedThisFrame() && canShoot)
+        {
+            Shoot();
+        }
+    }
+
+    bool TryGetAimPointer(out Vector2 pointer)
+    {
+        pointer = Vector2.zero;
+
+        for (int i = 0; i < Input.touchCount; i++)
+        {
+            Touch t = Input.GetTouch(i);
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId))
+                continue;
+            pointer = t.position;
+            return true;
+        }
+
+        pointer = Input.mousePosition;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    bool WasShootPressedThisFrame()
+    {
+        for (int i = 0; i < Input.touchCount; i++)
+        {
+            Touch t = Input.GetTouch(i);
+            if (t.phase != UnityEngine.TouchPhase.Began)
+                continue;
+
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId))
+                continue;
+
+            return true;
         }
 
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            {
-            }
-            else
-            {
-                isAiming = true;
-                activeFingerId = -1;
-                touchStartPos = Input.mousePosition;
-                touchStartTime = Time.time;
-                AimAtScreenPoint(touchStartPos);
-            }
-        }
+                return false;
 
-        if (isAiming && Input.GetMouseButton(0))
-        {
-            AimAtScreenPoint(Input.mousePosition);
-        }
-
-        if (isAiming && Input.GetMouseButtonUp(0))
-        {
-            ReleaseAimAndShoot(Input.mousePosition);
-            isAiming = false;
-            activeFingerId = -1;
-        }
-    }
-
-    bool WasShootPressedThisFrame()
-    {
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             return true;
-
-        if (Input.GetMouseButtonDown(0))
-            return true;
-
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
-            return true;
+        }
 
         return false;
-    }
-
-    void HandleTouchInput()
-    {
-        for (int i = 0; i < Input.touchCount; i++)
-        {
-            Touch t = Input.GetTouch(i);
-
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId))
-                continue;
-
-            if (!isAiming && (t.phase == UnityEngine.TouchPhase.Began))
-            {
-                isAiming = true;
-                activeFingerId = t.fingerId;
-                touchStartPos = t.position;
-                touchStartTime = Time.time;
-                AimAtScreenPoint(t.position);
-                return;
-            }
-
-            if (isAiming && t.fingerId == activeFingerId)
-            {
-                if (t.phase == UnityEngine.TouchPhase.Moved || t.phase == UnityEngine.TouchPhase.Stationary)
-                {
-                    AimAtScreenPoint(t.position);
-                    return;
-                }
-
-                if (t.phase == UnityEngine.TouchPhase.Ended || t.phase == UnityEngine.TouchPhase.Canceled)
-                {
-                    ReleaseAimAndShoot(t.position);
-                    isAiming = false;
-                    activeFingerId = -1;
-                    return;
-                }
-            }
-        }
-    }
-
-    void ReleaseAimAndShoot(Vector2 releasePos)
-    {
-        if (!canShoot || firePoint == null || currentBubble == null) return;
-
-        Vector2 pull = releasePos - touchStartPos;
-        if (pull.magnitude < 5f)
-        {
-            Shoot();
-            return;
-        }
-
-        Vector3 screenDir = (Vector3)(touchStartPos - releasePos);
-        screenDir.z = Mathf.Abs(Camera.main.transform.position.z);
-        Vector3 worldTarget = Camera.main.ScreenToWorldPoint(screenDir + (Vector3)firePoint.position);
-
-        Vector3 worldStart = Camera.main.ScreenToWorldPoint(new Vector3(touchStartPos.x, touchStartPos.y, Mathf.Abs(Camera.main.transform.position.z)));
-        Vector3 worldRelease = Camera.main.ScreenToWorldPoint(new Vector3(releasePos.x, releasePos.y, Mathf.Abs(Camera.main.transform.position.z)));
-        Vector2 worldPull = (Vector2)(worldRelease - worldStart);
-
-        Vector2 shootDir = (-worldPull).normalized;
-        float speed = Mathf.Clamp(worldPull.magnitude * pullSpeedFactor, 3f, 40f);
-
-        currentBubble.Shoot(shootDir, speed);
-        GameManager.Instance?.OnBubbleShot();
-        currentBubble = null;
-        canShoot = false;
-        Invoke(nameof(SpawnBubble), spawnDelay);
     }
 
     void AimAtScreenPoint(Vector2 screenPos)
@@ -215,36 +244,7 @@ public class Shooter : MonoBehaviour
         Vector2 dir = mouse - aimPivot.position;
 
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-
         angle = Mathf.Clamp(angle, 10f, 170f);
-
-        aimPivot.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-    }
-
-    void Aim()
-    {
-        if (aimPivot == null || Camera.main == null) return;
-
-        Vector2 pointer = Vector2.zero;
-        if (Touchscreen.current != null)
-        {
-            pointer = Touchscreen.current.primaryTouch.position.ReadValue();
-        }
-        else if (Mouse.current != null)
-        {
-            pointer = Mouse.current.position.ReadValue();
-        }
-
-        Vector3 mouse = pointer;
-        mouse.z = Mathf.Abs(Camera.main.transform.position.z);
-        mouse = Camera.main.ScreenToWorldPoint(mouse);
-
-        Vector2 dir = mouse - aimPivot.position;
-
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-
-        angle = Mathf.Clamp(angle, 10f, 170f);
-
         aimPivot.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
     }
 
@@ -290,11 +290,14 @@ public class Shooter : MonoBehaviour
 
         if (bubble != null)
         {
-            bubble.PrepareInLauncher(firePoint.position);
-            int colorId = GetRandomColorId();
+            bubble.PrepareInLauncher(firePoint.position, firePoint);
+            if (nextColorId < 0) nextColorId = GetRandomColorId();
+            int colorId = nextColorId;
             bubble.SetColor(colorId, bubbleColors[Mathf.Clamp(colorId, 0, bubbleColors.Length - 1)]);
             currentBubble = bubble;
             canShoot = true;
+            nextColorId = GetRandomColorId();
+            GameManager.Instance?.OnNextBubbleChanged();
         }
         else
         {
@@ -306,5 +309,16 @@ public class Shooter : MonoBehaviour
     int GetRandomColorId()
     {
         return Random.Range(0, bubbleColors.Length);
+    }
+
+    public int GetNextColorId()
+    {
+        return nextColorId;
+    }
+
+    public Color GetColorById(int id)
+    {
+        if (bubbleColors == null || bubbleColors.Length == 0) return Color.white;
+        return bubbleColors[Mathf.Clamp(id, 0, bubbleColors.Length - 1)];
     }
 }

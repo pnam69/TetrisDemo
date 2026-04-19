@@ -11,6 +11,8 @@ public class Bubble : MonoBehaviour
     private CircleCollider2D circleCollider;
     private GridSystem grid;
     private const float CleanupY = -8f;
+    [SerializeField] private float popDuration = 0.12f;
+    private bool isPopping;
 
     public Rigidbody2D RB => rb;
 
@@ -32,7 +34,7 @@ public class Bubble : MonoBehaviour
 
         circleCollider.isTrigger = false;
 
-        grid = FindObjectOfType<GridSystem>();
+        grid = Object.FindFirstObjectByType<GridSystem>();
 
         rb.freezeRotation = true;
 
@@ -57,12 +59,22 @@ public class Bubble : MonoBehaviour
         }
     }
 
-    public void PrepareInLauncher(Vector3 spawnPos)
+    // attachTo: optional transform to parent the bubble to (e.g., the firePoint)
+    public void PrepareInLauncher(Vector3 spawnPos, Transform attachTo = null)
     {
         isSnapped = false;
 
-        transform.SetParent(null);
-        transform.position = spawnPos;
+        if (attachTo != null)
+        {
+            transform.SetParent(attachTo, false);
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+        }
+        else
+        {
+            transform.SetParent(null);
+            transform.position = spawnPos;
+        }
 
         if (rb == null) return;
         rb.simulated = false;
@@ -90,6 +102,90 @@ public class Bubble : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Static;
         rb.simulated = true;
         isSnapped = true;
+    }
+
+    public void DropAndFall()
+    {
+        if (rb == null) return;
+
+        isSnapped = false;
+        transform.SetParent(null, true);
+
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.simulated = true;
+        rb.gravityScale = 1f;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        if (circleCollider != null)
+            circleCollider.isTrigger = true;
+
+        // ensure falling clones eventually clean up
+        StartCoroutine(AutoDestroyAfterFall());
+    }
+
+    System.Collections.IEnumerator AutoDestroyAfterFall()
+    {
+        // wait up to 6 seconds then destroy if still present
+        float timeout = 6f;
+        float t = 0f;
+        while (t < timeout)
+        {
+            if (transform.position.y < CleanupY)
+                break;
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        if (gameObject != null)
+            Destroy(gameObject);
+    }
+
+    public void PopAndDestroy()
+    {
+        if (isPopping)
+            return;
+
+        StartCoroutine(PopRoutine());
+    }
+
+    System.Collections.IEnumerator PopRoutine()
+    {
+        isPopping = true;
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.simulated = false;
+        }
+
+        if (circleCollider != null)
+            circleCollider.enabled = false;
+
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        Vector3 fromScale = transform.localScale;
+        Color fromColor = sr != null ? sr.color : Color.white;
+        float t = 0f;
+
+        while (t < popDuration)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / popDuration);
+            transform.localScale = Vector3.Lerp(fromScale, fromScale * 1.25f, k);
+
+            if (sr != null)
+            {
+                Color c = fromColor;
+                c.a = Mathf.Lerp(fromColor.a, 0f, k);
+                sr.color = c;
+            }
+
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 
     void OnCollisionEnter2D(Collision2D col)
@@ -125,7 +221,7 @@ public class Bubble : MonoBehaviour
         }
 
         if (grid == null)
-            grid = FindObjectOfType<GridSystem>();
+            grid = Object.FindFirstObjectByType<GridSystem>();
 
         if (grid != null)
             grid.RequestSnap(this, anchor, hitPoint);
