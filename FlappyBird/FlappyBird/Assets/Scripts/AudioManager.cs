@@ -7,11 +7,6 @@ public class AudioManager : MonoBehaviour
     public AudioSource sfxSource;
     public AudioSource bgmSource;
 
-    // legacy clips
-    public AudioClip shootClip;
-    public AudioClip popClip;
-    public AudioClip dropClip;
-
     // game clips
     public AudioClip flapClip;
     public AudioClip scoreClip;
@@ -53,17 +48,14 @@ public class AudioManager : MonoBehaviour
     }
 
     // legacy API
-    public void PlayShoot() => PlayOneShot(shootClip);
-    public void PlayPop() => PlayOneShot(popClip);
-    public void PlayDrop() => PlayOneShot(dropClip);
 
     // game API
-    public void PlayFlap() => PlayOneShot(flapClip ?? shootClip);
-    public void PlayScore() => PlayOneShot(scoreClip ?? popClip);
-    public void PlayHit() => PlayOneShot(hitClip ?? dropClip);
+    public void PlayFlap() => PlayOneShot(flapClip);
+    public void PlayScore() => PlayOneShot(scoreClip);
+    public void PlayHit() => PlayOneShot(hitClip);
     public void PlayGameOver()
     {
-        PlayOneShot(gameOverClip ?? dropClip);
+        PlayOneShot(gameOverClip);
         StopBgm();
     }
 

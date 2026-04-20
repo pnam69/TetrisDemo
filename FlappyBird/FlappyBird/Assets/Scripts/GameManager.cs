@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,6 +23,11 @@ public class GameManager : MonoBehaviour
     public Toggle soundToggle;
     public GameObject pausePanel;
 
+    [Header("High Score Panel")]
+    public GameObject highScorePanel;
+    public TMP_Text highScorePanelScoreText;
+    public TMP_Text highScorePanelAchievementsText;
+
     [Header("Gameplay")]
     public Bird bird;
     public PipeSpawner pipeSpawner;
@@ -36,7 +42,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Difficulty")]
     public float startPipeSpeed = 2.8f;
-    public float maxPipeSpeed = 5.5f;
+    public float maxPipeSpeed = 10.5f;
     public float speedRampPerSecond = 0.05f;
     public float startSpawnInterval = 1.45f;
     public float minSpawnInterval = 0.9f;
@@ -51,6 +57,7 @@ public class GameManager : MonoBehaviour
 
     private bool isPaused = false;
     public bool inputLocked = false;
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -66,6 +73,10 @@ public class GameManager : MonoBehaviour
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
 
+        reached1 = PlayerPrefs.GetInt("Ach_Reached1", 0) == 1;
+        reached10 = PlayerPrefs.GetInt("Ach_Reached10", 0) == 1;
+        reached50 = PlayerPrefs.GetInt("Ach_Reached50", 0) == 1;
+
         if (soundToggle != null)
         {
             bool isSoundOn = PlayerPrefs.GetInt("Sound", 1) == 1;
@@ -75,6 +86,7 @@ public class GameManager : MonoBehaviour
 
         SetMenuState();
         UpdateUI();
+        UpdateHighScorePanel();
         Time.timeScale = 1f;
 
         if (AudioManager.Instance != null)
@@ -95,13 +107,13 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        if (bird != null) bird.gameObject.SetActive(true);
         score = 0;
         comboStreak = 0;
         survivalTime = 0f;
         isGameOver = false;
         isStarted = true;
-        reached10 = false;
-        reached50 = false;
+        // do not clear persisted achievement flags here
         isPaused = false;
 
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
@@ -110,9 +122,10 @@ public class GameManager : MonoBehaviour
         if (gameHUDPanel != null) gameHUDPanel.SetActive(true);
         if (pausePanel != null) pausePanel.SetActive(false);
 
+        // Ensure Bird.Start has executed before calling BeginPlay (so defaultGravityScale is set)
         if (bird != null)
         {
-            bird.BeginPlay();
+            StartCoroutine(BeginPlayNextFrame());
         }
 
         if (pipeSpawner != null)
@@ -149,6 +162,7 @@ public class GameManager : MonoBehaviour
         }
 
         CheckAchievements();
+        UpdateHighScorePanel();
         UpdateUI();
     }
 
@@ -166,6 +180,7 @@ public class GameManager : MonoBehaviour
         {
             highScore = score;
             PlayerPrefs.SetInt("HighScore", highScore);
+            UpdateHighScorePanel();
         }
 
         if (AudioManager.Instance != null)
@@ -176,6 +191,45 @@ public class GameManager : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
         if (gameHUDPanel != null) gameHUDPanel.SetActive(false);
         UpdateUI();
+    }
+
+    public void OpenHighScorePanel()
+    {
+        if (highScorePanel == null) return;
+        UpdateHighScorePanel();
+        highScorePanel.SetActive(true);
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+    }
+
+    public void CloseHighScorePanel()
+    {
+        if (highScorePanel != null) highScorePanel.SetActive(false);
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
+    }
+
+    private void UpdateHighScorePanel()
+    {
+        if (highScorePanelScoreText != null)
+        {
+            highScorePanelScoreText.text = "High Score: " + highScore;
+        }
+
+        if (highScorePanelAchievementsText != null)
+        {
+            highScorePanelAchievementsText.text = GetAchievementsSummary();
+        }
+    }
+
+    private string GetAchievementsSummary()
+    {
+        List<string> reached = new List<string>();
+        if (reached1) reached.Add("First step");
+        if (reached10) reached.Add("10 points");
+        if (reached50) reached.Add("50 points");
+
+        if (reached.Count == 0) return "No achievements yet.";
+
+        return "Achievements:\n" + string.Join("\n", reached);
     }
 
     public void RestartGame()
@@ -197,7 +251,27 @@ public class GameManager : MonoBehaviour
 
     public void BackToMenu()
     {
+        isStarted = false;
+        isGameOver = false;
+        isPaused = false;
+        inputLocked = false;
+        Time.timeScale = 1f;
+
+        if (pipeSpawner != null)
+            pipeSpawner.StopSpawning();
+
         SetMenuState();
+        if (highScorePanel != null) highScorePanel.SetActive(false);
+
+        if (gameOverPanel != null)
+        {
+            var cg = gameOverPanel.GetComponent<CanvasGroup>();
+            if (cg != null)
+            {
+                cg.blocksRaycasts = false;
+                cg.interactable = false;
+            }
+        }
 
         if (AudioManager.Instance != null)
         {
@@ -251,12 +325,36 @@ public class GameManager : MonoBehaviour
         isStarted = false;
         isGameOver = false;
         isPaused = false;
-
+        if(highScorePanel != null) highScorePanel.SetActive(false);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (gameHUDPanel != null) gameHUDPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
+
+        // Clear gameplay state so menu is clean
+        score = 0;
+        comboStreak = 0;
+        survivalTime = 0f;
+        lastScoreTime = -999f;
+        inputLocked = false;
+
+        // Stop spawning and remove any existing pipes
+        if (pipeSpawner != null)
+            pipeSpawner.StopSpawning();
+
+        var pipes = GameObject.FindObjectsOfType<PipeMove>();
+        for (int i = 0; i < pipes.Length; i++)
+        {
+            if (pipes[i] != null)
+                Destroy(pipes[i].gameObject);
+        }
+
+        // Deactivate bird while in menu (StartGame will reactivate)
+        if (bird != null)
+            bird.gameObject.SetActive(false);
+
+        UpdateUI();
     }
 
     private void CheckAchievements()
@@ -265,39 +363,42 @@ public class GameManager : MonoBehaviour
         {
             reached1 = true;
             ShowAchievement("Achievement unlocked: First step");
+            PlayerPrefs.SetInt("Ach_Reached1", 1);
+            PlayerPrefs.Save();
         }
         if (!reached10 && score >= 10)
         {
             reached10 = true;
             ShowAchievement("Achievement unlocked: 10 points");
+            PlayerPrefs.SetInt("Ach_Reached10", 1);
+            PlayerPrefs.Save();
         }
         if (!reached50 && score >= 50)
         {
             reached50 = true;
             ShowAchievement("Achievement unlocked: 50 points");
+            PlayerPrefs.SetInt("Ach_Reached50", 1);
+            PlayerPrefs.Save();
         }
     }
 
     private void ShowAchievement(string message)
     {
-        // Prefer a dedicated AchievementUI component if assigned
         if (achievementUI != null)
         {
             achievementUI.Show(message);
             return;
         }
 
-        // Fallback to a single TMP text if present
         if (achievementText == null)
         {
             Debug.Log(message);
             return;
         }
 
-        StopCoroutine(nameof(HideAchievementRoutine));
+        StopAllCoroutines();
         achievementText.text = message;
         achievementText.gameObject.SetActive(true);
-        StopAllCoroutines();
         StartCoroutine(HideAchievementRoutine());
     }
 
@@ -369,4 +470,28 @@ public class GameManager : MonoBehaviour
 
         inputLocked = false;
     }
+
+    private IEnumerator BeginPlayNextFrame()
+    {
+        yield return null; // wait one frame
+        if (bird != null)
+            bird.BeginPlay();
+    }
+
+    public void SetHighScore(int value)
+    {
+        highScore = value;
+        PlayerPrefs.SetInt("HighScore", value);
+
+        PlayerPrefs.DeleteKey("Ach_Reached1");
+        PlayerPrefs.DeleteKey("Ach_Reached10");
+        PlayerPrefs.DeleteKey("Ach_Reached50");
+        PlayerPrefs.Save();
+
+        reached1 = reached10 = reached50 = false;
+
+        UpdateHighScorePanel();
+        UpdateUI();
+    }
 }
+

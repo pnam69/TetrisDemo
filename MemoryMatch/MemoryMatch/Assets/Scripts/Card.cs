@@ -94,7 +94,8 @@ public class Card : MonoBehaviour
 
         if (frontImage != null)
         {
-            frontImage.color = new Color(1f, 1f, 1f, 0.7f);
+            frontImage.color = new Color(1f, 1f, 1f, 0.3f);
+            backImage.alpha = 0f;
         }
         backImage.blocksRaycasts = false;
         backImage.interactable = false;
@@ -131,13 +132,14 @@ public class Card : MonoBehaviour
             }
         }
     }
-    public void SetCard(int id)
+    public void SetCard(int id, int spriteIndex)
     {
         cardID = id;
 
-        if (frontImage != null && faceSprites != null && id < faceSprites.Length)
+        if (frontImage != null && faceSprites != null && faceSprites.Length > 0)
         {
-            frontImage.sprite = faceSprites[id];
+            int idx = Mathf.Clamp(spriteIndex, 0, faceSprites.Length - 1);
+            frontImage.sprite = faceSprites[idx];
         }
     }
 }

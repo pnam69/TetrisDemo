@@ -542,14 +542,52 @@ public class GridSystem : MonoBehaviour
         int startRow = Mathf.Max(0, defaultStartRow);
         int xStart = -Mathf.FloorToInt(defaultCols * 0.5f);
 
+        // To reduce repeating patterns, pick colors randomly but try to avoid
+        // assigning the same color as already assigned neighbors when possible.
+        Dictionary<Vector2Int, int> assigned = new Dictionary<Vector2Int, int>();
+
         for (int y = defaultRows - 1; y >= 0; y--)
         {
             for (int x = 0; x < defaultCols; x++)
             {
+                Vector2Int pos = new Vector2Int(xStart + x, y + startRow);
+
+                // collect neighbor colors that are already assigned
+                HashSet<int> forbidden = new HashSet<int>();
+                Vector2Int[] neighborOffsets = (pos.y % 2 == 0) ? EvenRowNeighbors : OddRowNeighbors;
+                for (int ni = 0; ni < neighborOffsets.Length; ni++)
+                {
+                    Vector2Int npos = pos + neighborOffsets[ni];
+                    if (assigned.TryGetValue(npos, out int nc))
+                    {
+                        forbidden.Add(nc);
+                    }
+                }
+
+                int colorID;
+                // build list of available colors
+                List<int> available = new List<int>(colorsCount);
+                for (int c = 0; c < colorsCount; c++)
+                {
+                    if (!forbidden.Contains(c)) available.Add(c);
+                }
+
+                if (available.Count == 0)
+                {
+                    // all colors are forbidden, pick any at random
+                    colorID = UnityEngine.Random.Range(0, colorsCount);
+                }
+                else
+                {
+                    colorID = available[UnityEngine.Random.Range(0, available.Count)];
+                }
+
+                assigned[pos] = colorID;
+
                 initialLayout.Add(new LevelBubble
                 {
-                    position = new Vector2Int(xStart + x, y + startRow),
-                    colorID = (x + y) % colorsCount
+                    position = pos,
+                    colorID = colorID
                 });
             }
         }

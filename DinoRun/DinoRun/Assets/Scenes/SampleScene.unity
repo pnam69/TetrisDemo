@@ -3096,7 +3096,7 @@ MonoBehaviour:
   fallMultiplier: 4
   lowJumpMultiplier: 2
   maxJumpHoldTime: 0.15
-  enableDoubleJump: 0
+  enableDoubleJump: 1
   maxJumpCount: 2
   groundCheck: {fileID: 1729711260}
   groundCheckRadius: 0.05
@@ -3181,7 +3181,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.9178858, y: -0.7780846}
+  m_Offset: {x: -0.9178858, y: -0.8486905}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -3191,7 +3191,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3.3431392, y: 2.7962022}
+  m_Size: {x: 3.3431392, y: 2.6549902}
   m_EdgeRadius: 0
 --- !u!61 &2070261707
 BoxCollider2D:
@@ -3250,7 +3250,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 7e2452ff7f54fb64b85fd00256e8a0f0, type: 2}
-  m_CullingMode: 0
+  m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
@@ -3310,7 +3310,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 1919a145ff212114999801d131f9a25d, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -3318,7 +3318,7 @@ SpriteRenderer:
   m_Size: {x: 5.47, y: 4.81}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

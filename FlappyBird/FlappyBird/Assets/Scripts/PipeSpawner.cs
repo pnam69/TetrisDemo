@@ -4,12 +4,12 @@ public class PipeSpawner : MonoBehaviour
 {
     [Header("Spawn Settings")]
     public GameObject pipePrefab;
-    public float spawnInterval = 18.0f;
+    public float spawnInterval = 12.0f;
     public float initialDelay = 0f;
     public float minSpawnOffsetX = 4.8f;
     public float maxSpawnOffsetX = 6.0f;
     [Header("Gap Control")]
-    public float minHorizontalGap = 4.5f; // ensure pipes don't spawn closer than this horizontally
+    public float minHorizontalGap = 4.5f;
     public bool logSpawns = false;
     
     [Header("Height Variation")]

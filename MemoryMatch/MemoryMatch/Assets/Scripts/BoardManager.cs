@@ -71,6 +71,55 @@ public class BoardManager : MonoBehaviour
         GridLayoutGroup grid = boardParent.GetComponent<GridLayoutGroup>();
         if (grid != null) grid.enabled = true;
 
+        // choose sprite indices for each pair randomly (allow reuse if pairCount > available sprites)
+        Card proto = cardPrefab.GetComponent<Card>();
+        int spriteCount = (proto != null && proto.faceSprites != null) ? proto.faceSprites.Length : 0;
+
+        List<int> spritePool = new List<int>();
+        for (int i = 0; i < spriteCount; i++) spritePool.Add(i);
+
+        // Build a randomized list of sprite indices for each pair.
+        // We take sprites without replacement until exhausted, then reshuffle and continue
+        // so that assignments are more randomly distributed instead of repeating in order.
+        List<int> pairSpriteList = new List<int>();
+        if (spriteCount <= 0)
+        {
+            for (int i = 0; i < pairCount; i++) pairSpriteList.Add(0);
+        }
+        else
+        {
+            List<int> tempPool = new List<int>(spritePool);
+            // local shuffle helper
+            System.Action<List<int>> Shuffle = (list) =>
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    int r = Random.Range(i, list.Count);
+                    int t = list[i]; list[i] = list[r]; list[r] = t;
+                }
+            };
+
+            Shuffle(tempPool);
+
+            while (pairSpriteList.Count < pairCount)
+            {
+                if (tempPool.Count == 0)
+                {
+                    tempPool = new List<int>(spritePool);
+                    Shuffle(tempPool);
+                }
+
+                pairSpriteList.Add(tempPool[0]);
+                tempPool.RemoveAt(0);
+            }
+        }
+
+        Dictionary<int,int> pairToSprite = new Dictionary<int,int>();
+        for (int i = 0; i < pairCount; i++)
+        {
+            pairToSprite[i] = pairSpriteList[i];
+        }
+
         foreach (int id in cardIDs)
         {
             GameObject cardObj = Instantiate(cardPrefab, boardParent);
@@ -78,7 +127,8 @@ public class BoardManager : MonoBehaviour
 
             if (card != null)
             {
-                card.SetCard(id);
+                int spriteIndex = pairToSprite.ContainsKey(id) ? pairToSprite[id] : 0;
+                card.SetCard(id, spriteIndex);
                 card.SetSize(GetCardSize());
             }
         }

@@ -34,7 +34,7 @@ public class Dinosaur : MonoBehaviour
     public LayerMask groundLayer;
 
     [Header("Slide")]
-    public float slideDuration = 1.2f;
+    public float slideDuration = 1.5f;
 
     private PlayerState currentState = PlayerState.Idle;
 
@@ -48,7 +48,6 @@ public class Dinosaur : MonoBehaviour
 
     void Update()
     {
-        // If there's no GameManager or the game hasn't started yet, stay idle on the start screen
         if (GameManager.Instance == null || !GameManager.Instance.gameStarted)
         {
             currentState = PlayerState.Idle;
@@ -56,7 +55,6 @@ public class Dinosaur : MonoBehaviour
             return;
         }
 
-        // If there's a UI start panel visible, keep the player idle (defensive for cases where gameStarted may already be true)
         UIManager ui = Object.FindFirstObjectByType<UIManager>();
         if (ui != null && ui.startPanel != null && ui.startPanel.activeInHierarchy)
         {
@@ -65,9 +63,15 @@ public class Dinosaur : MonoBehaviour
             return;
         }
 
+        CheckGround();
+
+        if (currentState == PlayerState.Idle && isGrounded)
+        {
+            currentState = PlayerState.Run;
+        }
+
         HandleInput();
         UpdateState();
-        CheckGround();
         UpdateAnimation();
     }
 

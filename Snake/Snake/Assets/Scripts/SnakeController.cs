@@ -32,15 +32,15 @@ public class SnakeController : MonoBehaviour
         switch (difficulty)
         {
             case 0:
-                baseMoveInterval = 0.25f;
+                baseMoveInterval = 0.35f;
                 break;
 
             case 1:
-                baseMoveInterval = 0.18f;
+                baseMoveInterval = 0.28f;
                 break;
 
             case 2:
-                baseMoveInterval = 0.14f;
+                baseMoveInterval = 0.24f;
                 break;
         }
 

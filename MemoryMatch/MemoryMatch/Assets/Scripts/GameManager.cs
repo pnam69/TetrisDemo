@@ -237,19 +237,6 @@ public class GameManager : MonoBehaviour
 #endif
     }
 
-    //public void WinGame()
-    //{
-    //    Debug.Log("YOU WIN");
-    //    isStarted = false;
-
-    //    if (winPanel != null)
-    //    {
-    //        winPanel.SetActive(true);
-    //        //Time.timeScale = 0f;
-    //    }
-    //    if (boardManager != null)
-    //        boardManager.boardParent.gameObject.SetActive(false);
-    //}
     public void WinGame()
     {
         Debug.Log("LEVEL COMPLETE");
