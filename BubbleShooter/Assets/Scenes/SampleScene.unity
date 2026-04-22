@@ -1352,7 +1352,7 @@ MonoBehaviour:
   spawnDelay: 0.5
   bubbleColors: []
   trajectoryLine: {fileID: 0}
-  trajectoryMaxBounces: 2
+  trajectoryMaxBounces: 1
   trajectoryMaxDistance: 25
 --- !u!4 &1040664342
 Transform:

@@ -6,7 +6,6 @@ public class SnakeController : MonoBehaviour
     [Header("Movement")]
     public float baseMoveInterval = 0.2f;
     public float speedIncreasePerLevel = 0.015f;
-    private float temporarySpeedModifier = 0f;
     public float moveInterval;
     private float moveTimer;
     private Vector2Int direction = Vector2Int.right;
@@ -19,7 +18,14 @@ public class SnakeController : MonoBehaviour
     private List<Transform> bodySegments = new List<Transform>();
     private List<Vector3> previousPositions = new List<Vector3>();
     private FoodSpawner foodSpawner;
-    
+
+    [Header("Temporary Buff")]
+    public float buffDuration = 3.5f;
+    private float buffTimer = 0f;
+    private bool buffActive = false;
+    private float temporarySpeedModifier = 0f;
+    private Color currentBuffColor = Color.white;
+
     void Start()
     {
         for (int i = 0; i < startingBodySize; i++)
@@ -32,7 +38,7 @@ public class SnakeController : MonoBehaviour
         switch (difficulty)
         {
             case 0:
-                baseMoveInterval = 0.35f;
+                baseMoveInterval = 0.32f;
                 break;
 
             case 1:
@@ -40,7 +46,7 @@ public class SnakeController : MonoBehaviour
                 break;
 
             case 2:
-                baseMoveInterval = 0.24f;
+                baseMoveInterval = 0.25f;
                 break;
         }
 
@@ -60,6 +66,20 @@ public class SnakeController : MonoBehaviour
         {
             moveTimer = 0f;
             Move();
+        }
+        if (buffActive)
+        {
+            buffTimer -= Time.deltaTime;
+
+            GameManager.Instance.UpdateBuffTimer(buffTimer, currentBuffColor);
+
+            if (buffTimer <= 0f)
+            {
+                buffActive = false;
+                temporarySpeedModifier = 0f;
+                UpdateSpeed();
+                GameManager.Instance.UpdateBuffTimer(0f,Color.white);
+            }
         }
     }
 
@@ -157,18 +177,30 @@ public class SnakeController : MonoBehaviour
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Normal);
                     GameManager.Instance.AddScore(10);
                     temporarySpeedModifier = 0f;
+                    buffTimer = buffDuration;
+                    buffActive = true;
+                    currentBuffColor = Color.white;
+                    GameManager.Instance.UpdateBuffTimer(0f, currentBuffColor);
                     break;
 
                 case FoodType.SpeedBoost:
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.SpeedBoost);
                     GameManager.Instance.AddScore(15);
-                    temporarySpeedModifier = -0.03f;
+                    temporarySpeedModifier = -0.15f; 
+                    buffTimer = buffDuration;
+                    buffActive = true;
+                    currentBuffColor = Color.green;
+                    GameManager.Instance.UpdateBuffTimer(buffTimer,currentBuffColor);
                     break;
 
                 case FoodType.Slow:
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Slow);
                     GameManager.Instance.AddScore(5);
-                    temporarySpeedModifier = 0.03f;
+                    temporarySpeedModifier = 0.15f;
+                    buffTimer = buffDuration;
+                    buffActive = true;
+                    currentBuffColor = Color.gray;
+                    GameManager.Instance.UpdateBuffTimer(buffTimer,currentBuffColor);
                     break;
             }
 

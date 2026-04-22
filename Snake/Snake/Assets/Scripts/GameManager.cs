@@ -1,3 +1,4 @@
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,9 +10,11 @@ public class GameManager : MonoBehaviour
     private ObstacleManager obstacleManager;
     public int score = 0;
     public int level = 1;
+    public float timer = 0f;
     public TMP_Text scoreText;
     public TMP_Text highScoreText;
     public TMP_Text levelText;
+    public TMP_Text buffTimerText;
     public GameObject gameOverPanel;
     public GameObject mainMenuPanel;
     public GameObject pausePanel;
@@ -72,6 +75,7 @@ public class GameManager : MonoBehaviour
 
         score = 0;
         level = 1;
+        timer = 0;
         isGameOver = false;
 
         UpdateUI();
@@ -136,10 +140,23 @@ public class GameManager : MonoBehaviour
         NextLevel();
         UpdateUI();
     }
+    public void UpdateBuffTimer(float timeRemaining, Color color)
+    {
+        if (timeRemaining > 0f)
+        {
+            buffTimerText.color = color;
+            buffTimerText.text = "Buff: " + timeRemaining.ToString("F1", CultureInfo.InvariantCulture) + "s";
+        }
+        else
+        {
+            buffTimerText.text = "";
+        }
+    }
     public void UpdateUI()
     {
         scoreText.text = "Score: " + score;
         levelText.text = "Level: " + level;
+        buffTimerText.text = "Buff Time: " + Mathf.FloorToInt(timer);
     }
     public void NextLevel()
     {
@@ -181,6 +198,7 @@ public class GameManager : MonoBehaviour
 
         score = 0;
         level = 1;
+        timer = 0.0f;
         isGameOver = false;
 
         UpdateUI();

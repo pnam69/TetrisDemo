@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9038f72046fad3047b0a38c5ef615189, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Food
-  foodType: 1
+  foodType: 0
 --- !u!61 &3878061631258380376
 BoxCollider2D:
   m_ObjectHideFlags: 0

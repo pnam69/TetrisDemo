@@ -99,9 +99,15 @@ public class Shooter : MonoBehaviour
 
             if (hit.collider.CompareTag("Wall"))
             {
-                remain -= Vector2.Distance(origin, hit.point);
+                // subtract the distance traveled to the hit
+                float traveled = Vector2.Distance(origin, hit.point);
+                remain -= traveled;
+
+                // reflect direction around the surface normal
                 d = Vector2.Reflect(d, hit.normal).normalized;
-                origin = new Vector3(hit.point.x, hit.point.y, origin.z) + (Vector3)(d * 0.02f);
+
+                float pushOut = radius + 0.01f;
+                origin = new Vector3(hit.point.x, hit.point.y, origin.z) + (Vector3)(hit.normal * pushOut) + (Vector3)(d * 0.001f);
                 continue;
             }
 
