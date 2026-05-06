@@ -45,6 +45,7 @@ public class Dinosaur : MonoBehaviour
     private int jumpCount;
 
     private float slideTimer;
+    private bool pendingEndSlide = false;
 
     void Update()
     {
@@ -207,10 +208,22 @@ public class Dinosaur : MonoBehaviour
 
     void EndSlide()
     {
+        if (slideTimer <= 0f)
+        {
+            CompleteEndSlide();
+            return;
+        }
+
+        pendingEndSlide = true;
+    }
+
+    void CompleteEndSlide()
+    {
         mainCollider.enabled = true;
         slideCollider.enabled = false;
 
         currentState = PlayerState.Run;
+        pendingEndSlide = false;
     }
 
     // ---------------- PHYSICS ----------------
@@ -280,6 +293,17 @@ public class Dinosaur : MonoBehaviour
     void UpdateAnimation()
     {
         animator.SetInteger("State", (int)currentState);
+        if (pendingEndSlide && animator != null)
+        {
+            var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            if (!animator.IsInTransition(0))
+            {
+                if (stateInfo.IsName("Run") || stateInfo.IsName("Idle") || !stateInfo.IsName("Slide"))
+                {
+                    CompleteEndSlide();
+                }
+            }
+        }
     }
 
     void OnCollisionEnter2D(Collision2D col)

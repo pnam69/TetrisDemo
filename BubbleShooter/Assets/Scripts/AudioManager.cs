@@ -1,16 +1,23 @@
 using UnityEngine;
 
+// Simple AudioManager singleton that plays common SFX and enforces per-sound cooldowns
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
+    [Header("Audio Sources & Clips")]
     public AudioSource sfxSource;
-    public AudioSource bgmSource;
-
-    public AudioClip shootClip;
     public AudioClip popClip;
     public AudioClip dropClip;
-    public AudioClip bgmClip;
+    public AudioClip shootClip;
+    public AudioClip clickClip;
+
+    [Header("Cooldowns (seconds)")]
+    [Tooltip("Minimum interval between pop sounds")] public float popCooldown = 0.05f;
+    [Tooltip("Minimum interval between drop/fall sounds")] public float dropCooldown = 0.35f;
+
+    private float lastPopTime = -100f;
+    private float lastDropTime = -100f;
 
     void Awake()
     {
@@ -19,54 +26,57 @@ public class AudioManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        // Optional: don't destroy on load if you want persistent audio manager
+        // DontDestroyOnLoad(gameObject);
 
         if (sfxSource == null)
         {
-            sfxSource = gameObject.AddComponent<AudioSource>();
-        }
-
-        if (bgmSource == null)
-        {
-            bgmSource = gameObject.AddComponent<AudioSource>();
-            bgmSource.loop = true;
+            sfxSource = gameObject.GetComponent<AudioSource>();
+            if (sfxSource == null)
+            {
+                sfxSource = gameObject.AddComponent<AudioSource>();
+            }
         }
     }
 
-    void Start()
+    public void SetPopCooldown(float seconds)
     {
-        PlayBgm();
+        popCooldown = Mathf.Max(0f, seconds);
     }
 
-    public void PlayShoot()
+    public void SetDropCooldown(float seconds)
     {
-        PlayOneShot(shootClip);
+        dropCooldown = Mathf.Max(0f, seconds);
     }
 
     public void PlayPop()
     {
-        PlayOneShot(popClip);
+        if (sfxSource == null || popClip == null) return;
+        float now = Time.unscaledTime;
+        if (now - lastPopTime < popCooldown) return;
+        lastPopTime = now;
+        sfxSource.PlayOneShot(popClip);
     }
 
     public void PlayDrop()
     {
-        PlayOneShot(dropClip);
+        if (sfxSource == null || dropClip == null) return;
+        float now = Time.unscaledTime;
+        if (now - lastDropTime < dropCooldown) return;
+        lastDropTime = now;
+        sfxSource.PlayOneShot(dropClip);
     }
 
-    public void PlayBgm()
+    public void PlayShoot()
     {
-        if (bgmSource == null || bgmClip == null) return;
-        if (bgmSource.isPlaying) return;
-
-        bgmSource.clip = bgmClip;
-        bgmSource.Play();
+        if (sfxSource == null || shootClip == null) return;
+        sfxSource.PlayOneShot(shootClip);
     }
 
-    void PlayOneShot(AudioClip clip)
+    public void PlayClick()
     {
-        if (sfxSource == null || clip == null) return;
-        sfxSource.PlayOneShot(clip);
+        if (sfxSource == null || clickClip == null) return;
+        sfxSource.PlayOneShot(clickClip);
     }
 }

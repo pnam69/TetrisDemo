@@ -232,7 +232,7 @@ public class Shooter : MonoBehaviour
         {
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return false;
-
+            AudioManager.Instance?.PlayClick();
             return true;
         }
 
@@ -265,7 +265,7 @@ public class Shooter : MonoBehaviour
         currentBubble.Shoot(dir, speed);
 
         GameManager.Instance?.OnBubbleShot();
-
+        AudioManager.Instance?.PlayShoot();
         currentBubble = null;
 
         Invoke(nameof(SpawnBubble), spawnDelay);

@@ -46,7 +46,6 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
-        difficultyDropdown.value = PlayerPrefs.GetInt("Difficulty", 1);
         soundToggle.isOn = PlayerPrefs.GetInt("Sound", 1) == 1;
         AudioListener.volume = soundToggle.isOn ? 1f : 0f;
         mainMenuPanel.SetActive(true);

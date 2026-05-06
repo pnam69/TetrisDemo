@@ -28,6 +28,9 @@ public class GameManager : MonoBehaviour
     public TMP_Text nextText;
     public GameObject victoryPanel;
     public GameObject gameOverPanel;
+    public GameObject mainMenuPanel;
+    [Header("Main Menu")]
+    public bool showMainMenuOnStart = true;
 
     private GridSystem grid;
     private Shooter shooter;
@@ -65,6 +68,14 @@ public class GameManager : MonoBehaviour
     {
         AutoBindUIReferences();
         UpdateUI();
+        // Show main menu on start if requested
+        if (showMainMenuOnStart && mainMenuPanel != null)
+        {
+            mainMenuPanel.SetActive(true);
+            // prevent gameplay until the player starts
+            isGameOver = true;
+            UpdateUI();
+        }
     }
 
     void ApplyDifficulty()
@@ -81,17 +92,27 @@ public class GameManager : MonoBehaviour
         AutoBindUIReferences();
         int bubblesLeft = grid != null ? grid.grid.Count : 0;
 
-        if (scoreText != null) scoreText.text = "Score: " + score;
-        if (levelText != null) levelText.text = "Level: " + level;
-        if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + bubblesLeft;
-        if (nextText != null && shooter != null)
+        bool menuActive = mainMenuPanel != null && mainMenuPanel.activeSelf;
+
+        if (scoreText != null) scoreText.gameObject.SetActive(!menuActive);
+        if (levelText != null) levelText.gameObject.SetActive(!menuActive);
+        if (shotsText != null) shotsText.gameObject.SetActive(!menuActive);
+        if (nextText != null) nextText.gameObject.SetActive(!menuActive);
+
+        if (!menuActive)
         {
-            int nextId = shooter.GetNextColorId();
-            nextText.text = "Next: " + (nextId + 1);
-            nextText.color = shooter.GetColorById(nextId);
+            if (scoreText != null) scoreText.text = "Score: " + score;
+            if (levelText != null) levelText.text = "Level: " + level;
+            if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + bubblesLeft;
+            if (nextText != null && shooter != null)
+            {
+                int nextId = shooter.GetNextColorId();
+                nextText.color = shooter.GetColorById(nextId);
+            }
         }
-        if (victoryPanel != null) victoryPanel.SetActive(isVictory);
-        if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
+
+        if (victoryPanel != null) victoryPanel.SetActive(isVictory && !menuActive);
+        if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver && !menuActive);
     }
 
     public void OnBubbleShot()
@@ -217,17 +238,18 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    int GetLoseGridRowThreshold()
+    public int GetLoseGridRowThreshold()
     {
         EnsureRefs();
 
         if (grid == null || shooter == null)
             return Mathf.FloorToInt(loseRow);
 
-        Vector3 refPos = shooter.firePoint != null
-            ? shooter.firePoint.position
-            : shooter.transform.position;
-
+        // Use the shooter's transform position as the reference row. Using the
+        // firePoint's world position can move when the shooter is rotated which
+        // would undesirably shift the lose line. The transform.position is a
+        // stable reference that doesn't change when aiming.
+        Vector3 refPos = shooter.transform.position;
         int shooterRow = grid.WorldToGrid(refPos).y;
 
         return shooterRow + Mathf.Max(0, loseRowsAboveShooter);
@@ -255,7 +277,7 @@ public class GameManager : MonoBehaviour
         if (levelText == null) levelText = FindTMPByName("LevelText");
         if (shotsText == null) shotsText = FindTMPByName("ShotText") ?? FindTMPByName("ShotsText");
         if (nextText == null) nextText = FindTMPByName("NextText") ?? FindTMPByName("NextBubbleText");
-
+        if (mainMenuPanel == null) mainMenuPanel = FindObjectByName("MainMenuPanel") ?? FindObjectByName("Main Menu Panel");
         if (victoryPanel == null) victoryPanel = FindObjectByName("WinPanel") ?? FindObjectByName("VictoryPanel");
         if (gameOverPanel == null) gameOverPanel = FindObjectByName("GameOverPanel");
         if (loseLine == null)
@@ -319,7 +341,7 @@ public class GameManager : MonoBehaviour
         if (shotsText != null) shotsText.text = "Shots Left: " + shotsLeft + "   Bubbles: " + (grid != null ? grid.grid.Count : 0);
         if (victoryPanel != null) victoryPanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
-        
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         EnsureRefs();
         if (shooter != null)
         {
@@ -333,6 +355,7 @@ public class GameManager : MonoBehaviour
 
     public void StartButton()
     {
+        // start a new game from the main menu
         RestartCurrentLevel();
     }
 

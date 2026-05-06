@@ -4,11 +4,6 @@ using UnityEngine;
 public class GridSystem : MonoBehaviour
 {
     [System.Serializable]
-    public class LevelBubble
-    {
-        public Vector2Int position;
-        public int colorID;
-    }
     private struct SnapRequest
     {
         public int bubbleId;
@@ -26,26 +21,160 @@ public class GridSystem : MonoBehaviour
     public GameObject bubblePrefab;
     public Color[] bubbleColors;
     public List<LevelBubble> initialLayout = new();
-    public int defaultRows = 5;
+    public int defaultRows = 3;
     public int defaultCols = 8;
     public int defaultStartRow = 2;
     [Range(0.75f, 1f)] public float hexRowFactor = 0.866f;
     [Range(0f, 1f)] public float rowXOffset = 0.5f;
-    [Range(2, 10)] public int defaultColorCount = 4;
+    [Range(2, 10)] public int defaultColorCount = 5;
     [Header("Dynamic Difficulty")]
     public bool autoScaleGeneratedLayoutByLevel = true;
-    public int rowsIncreaseEveryLevels = 2;
-    public int colorIncreaseEveryLevels = 3;
+    public int rowsIncreaseEveryLevels = 1;
+    public int colorIncreaseEveryLevels = 1;
     public int maxGeneratedRows = 10;
     public int maxGeneratedColorCount = 6;
-    public Color wallVisualColor = new Color(0.85f, 0.8f, 1f, 1.0f);
-    public Color boardBackgroundColor = new Color(0.08f, 0.1f, 0.16f, 0.05f);
+    [Header("Auto Drop")]
+    public bool enableAutoDrop = true;
+    [Tooltip("Base seconds between automatic grid drops")]
+    public float dropIntervalSeconds = 10f;
+    [Tooltip("Minimum allowed seconds between drops regardless of level")]
+    public float minDropIntervalSeconds = 2f;
+    [Tooltip("How much to decrease drop interval per level (level-1) * this amount")]
+    public float dropIntervalDecreasePerLevel = 0.5f;
     private static Sprite whiteSprite;
     private bool usingGeneratedLayout;
     private int baseDefaultRows;
     private int baseDefaultColorCount;
 
     public Dictionary<Vector2Int, Bubble> grid = new();
+    // Auto-drop runtime state
+    private Coroutine dropCoroutine;
+    private int lastKnownLevel = -1;
+    private bool lastKnownIsGameOver = false;
+    private bool lastKnownIsVictory = false;
+    public class LevelBubble
+    {
+        public Vector2Int position;
+        public int colorID;
+    }
+
+    // --- Auto-drop helpers ---
+    private void StartDropIfNeeded()
+    {
+        if (!enableAutoDrop) return;
+        if (dropCoroutine != null) return;
+        dropCoroutine = StartCoroutine(AutoDropCoroutine());
+    }
+
+    private void StopDropIfRunning()
+    {
+        if (dropCoroutine != null)
+        {
+            try { StopCoroutine(dropCoroutine); } catch { }
+            dropCoroutine = null;
+        }
+    }
+
+    private System.Collections.IEnumerator AutoDropCoroutine()
+    {
+        while (true)
+        {
+            float interval = ComputeDropIntervalSeconds();
+            float elapsed = 0f;
+            while (elapsed < interval)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            // If the game is over or won, stop automatic dropping
+            if (GameManager.Instance != null && (GameManager.Instance.isGameOver || GameManager.Instance.isVictory))
+            {
+                dropCoroutine = null;
+                yield break;
+            }
+
+            // perform a single-row drop
+            ShiftGridDown(1);
+        }
+    }
+
+    private float ComputeDropIntervalSeconds()
+    {
+        int level = 1;
+        if (GameManager.Instance != null)
+            level = Mathf.Max(1, GameManager.Instance.level);
+
+        float interval = dropIntervalSeconds - ((level - 1) * dropIntervalDecreasePerLevel);
+        return Mathf.Max(minDropIntervalSeconds, interval);
+    }
+
+    private void ShiftGridDown(int rows)
+    {
+        if (rows == 0) return;
+
+        // if game is already over or won, don't perform further shifts
+        if (GameManager.Instance != null && (GameManager.Instance.isGameOver || GameManager.Instance.isVictory))
+        {
+            StopDropIfRunning();
+            return;
+        }
+
+        var newGrid = new Dictionary<Vector2Int, Bubble>();
+        float deltaY = rows * (cellSize * hexRowFactor);
+
+        foreach (var kv in grid)
+        {
+            Vector2Int oldPos = kv.Key;
+            Vector2Int newPos = new Vector2Int(oldPos.x, oldPos.y - rows);
+            Bubble b = kv.Value;
+            if (b != null)
+            {
+                b.gridPos = newPos;
+                Vector3 world = b.transform.position;
+                world.y -= deltaY;
+                b.transform.position = world;
+            }
+
+            // If multiple bubbles map to the same newPos, last wins
+            newGrid[newPos] = b;
+        }
+
+        grid = newGrid;
+
+        // If the grid crossed the lose threshold after shifting, trigger game over
+        if (GameManager.Instance != null)
+        {
+            try
+            {
+                int loseRow = GameManager.Instance.GetLoseGridRowThreshold();
+                foreach (var kv in grid)
+                {
+                    if (kv.Key.y <= loseRow)
+                    {
+                        GameManager.Instance.TriggerGameOver();
+                        // stop further auto-dropping so we don't move the board after loss
+                        StopDropIfRunning();
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // swallow any exceptions to avoid stopping the game loop
+            }
+        }
+    }
+
+    private void ResetGridForStateChange()
+    {
+        StopDropIfRunning();
+
+        LoadLayout();
+
+        StartDropIfNeeded();
+    }
+    
     public int TopRowThreshold
     {
         get
@@ -89,6 +218,16 @@ public class GridSystem : MonoBehaviour
         EnsureBoardVisual();
 
         LoadLayout();
+
+        // initialize drop coroutine and last-known game state
+        if (GameManager.Instance != null)
+        {
+            lastKnownLevel = GameManager.Instance.level;
+            lastKnownIsGameOver = GameManager.Instance.isGameOver;
+            lastKnownIsVictory = GameManager.Instance.isVictory;
+        }
+
+        StartDropIfNeeded();
     }
 
     void AutoConfigureCellSize()
@@ -119,8 +258,6 @@ public class GridSystem : MonoBehaviour
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
         if (sr == null) sr = go.AddComponent<SpriteRenderer>();
 
-        sr.sprite = GetWhiteSprite();
-        sr.color = boardBackgroundColor;
         sr.sortingOrder = -30;
 
         float width = Mathf.Max(1f, defaultCols * cellSize + cellSize);
@@ -158,8 +295,6 @@ public class GridSystem : MonoBehaviour
                 sr = visualGo.AddComponent<SpriteRenderer>();
             }
 
-            sr.sprite = GetWhiteSprite();
-            sr.color = wallVisualColor;
             sr.sortingOrder = -20;
 
             visualGo.transform.localPosition = col.offset;
@@ -171,26 +306,12 @@ public class GridSystem : MonoBehaviour
         }
     }
 
-    static Sprite GetWhiteSprite()
-    {
-        if (whiteSprite != null) return whiteSprite;
-
-        Texture2D tex = Texture2D.whiteTexture;
-        whiteSprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), tex.width);
-        return whiteSprite;
-    }
-
     void EnsureTopCollider()
     {
         GameObject top = GameObject.FindGameObjectWithTag("Top");
         if (top == null) return;
 
         BoxCollider2D topCollider = top.GetComponent<BoxCollider2D>();
-        //if (topCollider == null)
-        //{
-        //    topCollider = top.AddComponent<BoxCollider2D>();
-        //    topCollider.size = new Vector2(10f, 0.5f);
-        //}
     }
 
     private static readonly Vector2Int[] EvenRowNeighbors =
@@ -307,15 +428,31 @@ public class GridSystem : MonoBehaviour
                 return;
         }
 
-        bubble.StopAndLock();
-        bubble.isSnapped = true;
-
+        // Safely snap the bubble into the computed target cell
+        bubble.SnapToGrid(GridToWorld(target), target);
         grid[target] = bubble;
 
-        bubble.transform.position = GridToWorld(target);
-        bubble.gridPos = target;
-
         ResolveBoardAfterSnap(target);
+    }
+
+    void Update()
+    {
+        // detect game state changes (level change, game over, victory) and reset layout when they occur
+        if (GameManager.Instance != null)
+        {
+            int lvl = GameManager.Instance.level;
+            bool isOver = GameManager.Instance.isGameOver;
+            bool isVic = GameManager.Instance.isVictory;
+
+            if (lvl != lastKnownLevel || isOver != lastKnownIsGameOver || isVic != lastKnownIsVictory)
+            {
+                // reset grid when a new level starts, or when game over / new game / victory occur
+                ResetGridForStateChange();
+                lastKnownLevel = lvl;
+                lastKnownIsGameOver = isOver;
+                lastKnownIsVictory = isVic;
+            }
+        }
     }
 
     private Vector2Int FindNearestFreeCell(Vector2Int start, Vector2 hitPoint)
@@ -542,8 +679,6 @@ public class GridSystem : MonoBehaviour
         int startRow = Mathf.Max(0, defaultStartRow);
         int xStart = -Mathf.FloorToInt(defaultCols * 0.5f);
 
-        // To reduce repeating patterns, pick colors randomly but try to avoid
-        // assigning the same color as already assigned neighbors when possible.
         Dictionary<Vector2Int, int> assigned = new Dictionary<Vector2Int, int>();
 
         for (int y = defaultRows - 1; y >= 0; y--)
@@ -552,7 +687,6 @@ public class GridSystem : MonoBehaviour
             {
                 Vector2Int pos = new Vector2Int(xStart + x, y + startRow);
 
-                // collect neighbor colors that are already assigned
                 HashSet<int> forbidden = new HashSet<int>();
                 Vector2Int[] neighborOffsets = (pos.y % 2 == 0) ? EvenRowNeighbors : OddRowNeighbors;
                 for (int ni = 0; ni < neighborOffsets.Length; ni++)
@@ -565,7 +699,6 @@ public class GridSystem : MonoBehaviour
                 }
 
                 int colorID;
-                // build list of available colors
                 List<int> available = new List<int>(colorsCount);
                 for (int c = 0; c < colorsCount; c++)
                 {
@@ -574,7 +707,6 @@ public class GridSystem : MonoBehaviour
 
                 if (available.Count == 0)
                 {
-                    // all colors are forbidden, pick any at random
                     colorID = UnityEngine.Random.Range(0, colorsCount);
                 }
                 else
@@ -634,7 +766,7 @@ public class GridSystem : MonoBehaviour
             int poppedCount = RemoveBubbles(matched);
             if (poppedCount > 0)
             {
-                AudioManager.Instance?.PlayPop();
+                SoundEffects.PlayPop();
             }
 
             HashSet<Vector2Int> anchored = GetAnchoredBubbles();
@@ -650,7 +782,7 @@ public class GridSystem : MonoBehaviour
             int droppedCount = RemoveBubbles(floating, true);
             if (droppedCount > 0)
             {
-                AudioManager.Instance?.PlayDrop();
+                SoundEffects.PlayDrop();
             }
 
             GameManager.Instance?.OnShotResolved(poppedCount, droppedCount);

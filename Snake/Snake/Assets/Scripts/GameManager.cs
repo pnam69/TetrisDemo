@@ -33,12 +33,10 @@ public class GameManager : MonoBehaviour
         highScore = PlayerPrefs.GetInt("HighScore", 0);
         difficultyDropdown.value = PlayerPrefs.GetInt("Difficulty", 1);
         soundToggle.isOn = PlayerPrefs.GetInt("Sound", 1) == 1;
-        // wire audio sources and restore mute state
         if (AudioManager.Instance != null)
         {
             if (bgmSource != null) AudioManager.Instance.bgmSource = bgmSource;
             if (sfxSource != null) AudioManager.Instance.sfxSource = sfxSource;
-            // only forward audio sources and mute state; clips should be assigned on AudioManager
             AudioManager.Instance.SetMuted(!soundToggle.isOn);
             AudioManager.Instance.PlayBgm();
         }

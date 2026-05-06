@@ -13,7 +13,8 @@ public class Bubble : MonoBehaviour
     private const float CleanupY = -8f;
     [SerializeField] private float popDuration = 0.12f;
     private bool isPopping;
-
+    public float popSoundCoolDown = 1f;
+    public float lastPopSoundTime;
     public Rigidbody2D RB => rb;
 
     void Awake()
@@ -104,6 +105,43 @@ public class Bubble : MonoBehaviour
         isSnapped = true;
     }
 
+    // Safely snap this bubble into a grid cell without causing collider overlap
+    public void SnapToGrid(Vector2 worldPos, Vector2Int gridPosition)
+    {
+        if (rb != null)
+        {
+            // stop physics while we teleport the bubble
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.simulated = false;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        // temporarily disable collider to avoid overlap pushing
+        bool colliderWasEnabled = false;
+        if (circleCollider != null)
+        {
+            colliderWasEnabled = circleCollider.enabled;
+            circleCollider.enabled = false;
+        }
+
+        transform.SetParent(null, true);
+        transform.position = worldPos;
+        gridPos = gridPosition;
+
+        // restore collider and make the body static
+        if (circleCollider != null)
+            circleCollider.enabled = colliderWasEnabled;
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Static;
+            rb.simulated = true;
+        }
+
+        isSnapped = true;
+    }
+
     public void DropAndFall()
     {
         if (rb == null) return;
@@ -158,6 +196,11 @@ public class Bubble : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+            if (Time.time - lastPopSoundTime >= popSoundCoolDown)
+            {
+                AudioManager.Instance.PlayPop();
+                lastPopSoundTime = Time.time;
+            }   
             rb.simulated = false;
         }
 
