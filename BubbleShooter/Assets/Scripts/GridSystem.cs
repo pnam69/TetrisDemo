@@ -11,6 +11,57 @@ public class GridSystem : MonoBehaviour
         public Vector2Int? anchor;
         public Vector2 hitPoint;
     }
+
+    private bool HasOccupiedNeighbor(Vector2Int pos)
+    {
+        foreach (Vector2Int n in GetNeighbors(pos))
+        {
+            if (grid.ContainsKey(n))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool TryFindLocalSnapTarget(Vector2Int center, Vector2 probePoint, out Vector2Int target)
+    {
+        int minRow = GetSnapMinRow();
+        bool found = false;
+        float bestSqr = float.MaxValue;
+        target = default;
+
+        bool CanUse(Vector2Int cell)
+        {
+            if (cell.y < minRow) return false;
+            if (grid.ContainsKey(cell)) return false;
+            if (grid.Count == 0) return true;
+            if (HasOccupiedNeighbor(cell)) return true;
+            return cell.y >= TopRowThreshold;
+        }
+
+        if (CanUse(center))
+        {
+            target = center;
+            bestSqr = (GridToWorld(center) - probePoint).sqrMagnitude;
+            found = true;
+        }
+
+        foreach (Vector2Int n in GetNeighbors(center))
+        {
+            if (!CanUse(n)) continue;
+
+            float sqr = (GridToWorld(n) - probePoint).sqrMagnitude;
+            if (!found || sqr < bestSqr)
+            {
+                target = n;
+                bestSqr = sqr;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
     [SerializeField, Range(0.001f, 1f)]
     public float wallThickness = 0.05f;
     private Queue<SnapRequest> snapQueue = new();
@@ -208,18 +259,18 @@ public class GridSystem : MonoBehaviour
             }
         }
 
-
         if (cellSize <= 0.01f)
         {
             AutoConfigureCellSize();
         }
+
+        EnsureCellSizeNotTooSmallForBubble();
         EnsureTopCollider();
         EnsureWallVisuals();
         EnsureBoardVisual();
 
         LoadLayout();
 
-        // initialize drop coroutine and last-known game state
         if (GameManager.Instance != null)
         {
             lastKnownLevel = GameManager.Instance.level;
@@ -232,6 +283,8 @@ public class GridSystem : MonoBehaviour
 
     void AutoConfigureCellSize()
     {
+        if (bubblePrefab == null) return;
+
         SpriteRenderer sr = bubblePrefab.GetComponent<SpriteRenderer>();
         if (sr == null || sr.sprite == null) return;
 
@@ -241,6 +294,22 @@ public class GridSystem : MonoBehaviour
         {
             cellSize = spriteWidth;
         }
+    }
+
+    void EnsureCellSizeNotTooSmallForBubble()
+    {
+        if (bubblePrefab == null) return;
+
+        SpriteRenderer sr = bubblePrefab.GetComponent<SpriteRenderer>();
+        if (sr == null || sr.sprite == null) return;
+
+        float scaleX = Mathf.Abs(bubblePrefab.transform.localScale.x);
+        float bubbleWidth = sr.sprite.bounds.size.x * scaleX;
+        if (bubbleWidth <= 0.01f) return;
+
+        float minCell = bubbleWidth * 0.98f;
+        if (cellSize < minCell)
+            cellSize = minCell;
     }
 
     void EnsureWallVisuals()
@@ -339,19 +408,17 @@ public class GridSystem : MonoBehaviour
         float width = cellSize;
         float height = cellSize * hexRowFactor;
 
-        float xOffset = (pos.y % 2 == 0) ? 0f : width * 0.5f;
-
-        return new Vector2(
-            pos.x * width + xOffset,
-            pos.y * height
-        );
+        float xOffset = (pos.y % 2 == 0) ? 0f : width * rowXOffset;
+        Vector3 local = new Vector3(pos.x * width + xOffset, pos.y * height, 0f);
+        return transform.TransformPoint(local);
     }
 
     public Vector2Int WorldToGrid(Vector2 world)
     {
-        int y = Mathf.RoundToInt(world.y / (hexRowFactor * cellSize));
-        float xOffset = (y % 2 == 0) ? 0f : rowXOffset;
-        int x = Mathf.RoundToInt(world.x / cellSize - xOffset);
+        Vector3 local = transform.InverseTransformPoint(world);
+        int y = Mathf.RoundToInt(local.y / (hexRowFactor * cellSize));
+        float xOffset = (y % 2 == 0) ? 0f : cellSize * rowXOffset;
+        int x = Mathf.RoundToInt((local.x - xOffset) / cellSize);
 
         return new Vector2Int(x, y);
     }
@@ -403,22 +470,167 @@ public class GridSystem : MonoBehaviour
         processing = false;
     }
 
-    private void ExecuteSnap(Bubble bubble, Vector2Int? anchor, Vector2 hitPoint)
+    private Vector2Int FindNearestFreeCell(Vector2Int start, Vector2 hitPoint)
     {
-        Vector2Int center = anchor ?? WorldToGrid(hitPoint);
-        Vector2Int target = FindSnapTarget(center, hitPoint);
+        Vector2Int best = start;
+        float bestSqr = float.MaxValue;
 
-        if (target.y < defaultStartRow)
-            target.y = defaultStartRow;
-
-        if (grid.ContainsKey(target))
+        if (!grid.ContainsKey(start))
         {
-            target = FindNearestFreeCell(center, hitPoint);
+            best = start;
+            bestSqr = (GridToWorld(start) - hitPoint).sqrMagnitude;
         }
 
-        if (grid.ContainsKey(target))
+        foreach (Vector2Int n in GetNeighbors(start))
+        {
+            if (grid.ContainsKey(n)) continue;
+            float sqr = (GridToWorld(n) - hitPoint).sqrMagnitude;
+            if (sqr < bestSqr)
+            {
+                best = n;
+                bestSqr = sqr;
+            }
+        }
+
+        return best;
+    }
+
+    private int GetSnapMinRow()
+    {
+        if (GameManager.Instance != null)
+        {
+            // Allow snapping into the lose-threshold row itself so placing a bubble there
+            // can immediately trigger the lose check. Previously this returned +1 which
+            // prevented placing on the lose row and swallowed the shot.
+            return GameManager.Instance.GetLoseGridRowThreshold();
+        }
+
+        return defaultStartRow;
+    }
+
+    private bool TryFindSnapTarget(Vector2Int center, Vector2 hitPoint, Vector2Int? anchor, out Vector2Int target)
+    {
+        const int maxDepth = 2;
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        Dictionary<Vector2Int, int> depth = new Dictionary<Vector2Int, int>();
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        List<Vector2Int> candidates = new List<Vector2Int>();
+        int minRow = GetSnapMinRow();
+
+        Vector2Int seed = anchor ?? center;
+        queue.Enqueue(seed);
+        depth[seed] = 0;
+        visited.Add(seed);
+
+        if (!grid.ContainsKey(center) && center.y >= minRow)
+            candidates.Add(center);
+
+        while (queue.Count > 0)
+        {
+            Vector2Int current = queue.Dequeue();
+            int currentDepth = depth[current];
+            if (currentDepth >= maxDepth)
+                continue;
+
+            foreach (Vector2Int next in GetNeighbors(current))
+            {
+                if (visited.Contains(next))
+                    continue;
+
+                visited.Add(next);
+                int nextDepth = currentDepth + 1;
+                depth[next] = nextDepth;
+
+                if (next.y >= minRow && !grid.ContainsKey(next))
+                {
+                    if (!candidates.Contains(next))
+                        candidates.Add(next);
+                }
+                else if (grid.ContainsKey(next) && nextDepth < maxDepth)
+                {
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        target = default;
+        if (candidates.Count == 0)
+            return false;
+
+        Vector2Int best = candidates[0];
+        float bestSqr = (GridToWorld(best) - hitPoint).sqrMagnitude;
+        for (int i = 1; i < candidates.Count; i++)
+        {
+            float sqr = (GridToWorld(candidates[i]) - hitPoint).sqrMagnitude;
+            if (sqr < bestSqr)
+            {
+                best = candidates[i];
+                bestSqr = sqr;
+            }
+        }
+
+        target = best;
+        return true;
+    }
+
+    private bool TryFindAdjacentSnapToAnchor(Vector2Int anchor, Vector2 probePoint, out Vector2Int target)
+    {
+        target = default;
+        int minRow = GetSnapMinRow();
+
+        Vector2 anchorWorld = GridToWorld(anchor);
+        Vector2 aimDir = (probePoint - anchorWorld);
+        if (aimDir.sqrMagnitude < 0.0001f)
+            aimDir = Vector2.up;
+        aimDir.Normalize();
+
+        bool found = false;
+        float bestScore = float.MinValue;
+
+        foreach (Vector2Int n in GetNeighbors(anchor))
+        {
+            if (n.y < minRow) continue;
+            if (grid.ContainsKey(n)) continue;
+
+            Vector2 candidateWorld = GridToWorld(n);
+            Vector2 dir = (candidateWorld - anchorWorld).normalized;
+            float alignment = Vector2.Dot(aimDir, dir);
+            float distancePenalty = (candidateWorld - probePoint).sqrMagnitude * 0.05f;
+            float score = alignment - distancePenalty;
+
+            if (!found || score > bestScore)
+            {
+                found = true;
+                bestScore = score;
+                target = n;
+            }
+        }
+
+        return found;
+    }
+
+    private void ExecuteSnap(Bubble bubble, Vector2Int? anchor, Vector2 hitPoint)
+    {
+        Vector2 probePoint = bubble != null ? (Vector2)bubble.transform.position : hitPoint;
+        Vector2Int center = WorldToGrid(probePoint);
+
+        Vector2Int target = default;
+        bool hasTarget = false;
+
+        if (anchor.HasValue && grid.ContainsKey(anchor.Value))
+        {
+            hasTarget = TryFindAdjacentSnapToAnchor(anchor.Value, probePoint, out target);
+        }
+
+        if (!hasTarget)
+        {
+            hasTarget = TryFindLocalSnapTarget(center, probePoint, out target);
+        }
+
+        if (!hasTarget || grid.ContainsKey(target) || target.y < GetSnapMinRow())
         {
             Destroy(bubble.gameObject);
+            GameManager.Instance?.OnShotResolved(0, 0);
             return;
         }
 
@@ -428,7 +640,6 @@ public class GridSystem : MonoBehaviour
                 return;
         }
 
-        // Safely snap the bubble into the computed target cell
         bubble.SnapToGrid(GridToWorld(target), target);
         grid[target] = bubble;
 
@@ -453,132 +664,6 @@ public class GridSystem : MonoBehaviour
                 lastKnownIsVictory = isVic;
             }
         }
-    }
-
-    private Vector2Int FindNearestFreeCell(Vector2Int start, Vector2 hitPoint)
-    {
-        Queue<Vector2Int> q = new Queue<Vector2Int>();
-        Dictionary<Vector2Int, int> depth = new Dictionary<Vector2Int, int>();
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-
-        q.Enqueue(start);
-        visited.Add(start);
-        depth[start] = 0;
-
-        int bestDepth = int.MaxValue;
-        List<Vector2Int> candidates = new List<Vector2Int>();
-
-        while (q.Count > 0)
-        {
-            Vector2Int current = q.Dequeue();
-            int d = depth[current];
-            if (d > bestDepth) continue;
-
-            if (!grid.ContainsKey(current))
-            {
-                if (d < bestDepth)
-                {
-                    bestDepth = d;
-                    candidates.Clear();
-                }
-
-                if (d == bestDepth)
-                    candidates.Add(current);
-
-                continue;
-            }
-
-            foreach (Vector2Int n in GetNeighbors(current))
-            {
-                if (visited.Contains(n)) continue;
-                visited.Add(n);
-                depth[n] = d + 1;
-                q.Enqueue(n);
-            }
-        }
-
-        if (candidates.Count == 0)
-            return start;
-
-        Vector2Int best = candidates[0];
-        float bestSqr = (GridToWorld(best) - hitPoint).sqrMagnitude;
-        for (int i = 1; i < candidates.Count; i++)
-        {
-            float sqr = (GridToWorld(candidates[i]) - hitPoint).sqrMagnitude;
-            if (sqr < bestSqr)
-            {
-                best = candidates[i];
-                bestSqr = sqr;
-            }
-        }
-
-        return best;
-    }
-
-    private Vector2Int FindSnapTarget(Vector2Int center, Vector2 hitPoint)
-    {
-        if (!grid.ContainsKey(center))
-            return center;
-        Queue<Vector2Int> q = new Queue<Vector2Int>();
-        Dictionary<Vector2Int, int> depth = new Dictionary<Vector2Int, int>();
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-
-        q.Enqueue(center);
-        visited.Add(center);
-        depth[center] = 0;
-
-        int bestDepth = int.MaxValue;
-        List<Vector2Int> candidates = new List<Vector2Int>();
-
-        while (q.Count > 0)
-        {
-            Vector2Int current = q.Dequeue();
-            int d = depth[current];
-            if (d > bestDepth) continue;
-
-            foreach (Vector2Int n in GetNeighbors(current))
-            {
-                if (visited.Contains(n)) continue;
-                visited.Add(n);
-
-                int nd = d + 1;
-
-                if (!grid.ContainsKey(n))
-                {
-                    if (nd < bestDepth)
-                    {
-                        bestDepth = nd;
-                        candidates.Clear();
-                    }
-
-                    if (nd == bestDepth)
-                        candidates.Add(n);
-
-                    continue;
-                }
-
-                depth[n] = nd;
-                q.Enqueue(n);
-            }
-        }
-
-        if (candidates.Count == 0)
-            return center;
-
-        Vector2Int best = candidates[0];
-        float bestSqr = (GridToWorld(best) - hitPoint).sqrMagnitude;
-
-        for (int i = 1; i < candidates.Count; i++)
-        {
-            float sqr = (GridToWorld(candidates[i]) - hitPoint).sqrMagnitude;
-            if (sqr < bestSqr)
-            {
-                best = candidates[i];
-                bestSqr = sqr;
-            }
-        }
-
-        return best;
     }
 
     public void LoadLayout()

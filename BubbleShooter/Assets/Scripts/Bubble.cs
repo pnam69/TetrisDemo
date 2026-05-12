@@ -207,9 +207,13 @@ public class Bubble : MonoBehaviour
         if (circleCollider != null)
             circleCollider.enabled = false;
 
+        // Play particle effect
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        Color bubbleColor = sr != null ? sr.color : Color.white;
+        ParticleEffectSystem.GetOrCreate()?.PlayBubblePopEffect(transform.position, bubbleColor);
+
         Vector3 fromScale = transform.localScale;
-        Color fromColor = sr != null ? sr.color : Color.white;
+        Color fromColor = bubbleColor;
         float t = 0f;
 
         while (t < popDuration)
@@ -267,6 +271,9 @@ public class Bubble : MonoBehaviour
             grid = Object.FindFirstObjectByType<GridSystem>();
 
         if (grid != null)
-            grid.RequestSnap(this, anchor, hitPoint);
+        {
+            Vector2 snapPoint = hitBubble ? (Vector2)transform.position : hitPoint;
+            grid.RequestSnap(this, anchor, snapPoint);
+        }
     }
 }

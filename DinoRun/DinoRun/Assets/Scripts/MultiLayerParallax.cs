@@ -5,36 +5,27 @@ public class MultiLayerParallax : MonoBehaviour
     [System.Serializable]
     public class ParallaxLayer
     {
-        [Tooltip("Parent GameObject containing all sprites for this layer")]
         public GameObject layerParent;
-
-        [Tooltip("All GameObjects (sprites) in this layer - add duplicates here")]
         public GameObject[] layerObjects;
-
         public float scrollSpeed = 1.0f;
+
+        [Header("Day/Night")]
+        [Range(0f, 1f)]
+        public float darknessMultiplier = 1f;
     }
 
-    [Header("Parallax Layers")]
     public ParallaxLayer[] layers;
-
-    [Header("Settings")]
     public float globalSpeedMultiplier = 1.0f;
 
-    [Header("Respawn Settings")]
     public float despawnX = -26f;
-
-    [Tooltip("Gap between sprites when respawning (negative for overlap)")]
     public float respawnGap = 0f;
-
-    void Start()
-    {
-        // nothing needed here; we use GameManager.Instance in Update
-    }
 
     void Update()
     {
-        // Respect global game state from GameManager
         if (GameManager.Instance == null) return;
+
+        UpdateDayNight();
+
         if (!GameManager.Instance.gameStarted) return;
         if (GameManager.Instance.isGameOver) return;
 
@@ -44,64 +35,114 @@ public class MultiLayerParallax : MonoBehaviour
         }
     }
 
-    void MoveLayer(ParallaxLayer layer)
+    void UpdateDayNight()
     {
-        if (layer.layerObjects == null || layer.layerObjects.Length == 0) return;
+        float duration = GameManager.Instance.dayNightCycleDuration;
 
-        // Base multiplier for this layer
-        float baseMultiplier = layer.scrollSpeed * globalSpeedMultiplier;
-        // Prefer using worldSpeed when available so parallax matches other movers
-        float worldSpeed = GameManager.Instance != null ? GameManager.Instance.worldSpeed : 0f;
-        float speed = (worldSpeed > 0f ? worldSpeed * baseMultiplier : baseMultiplier) * Time.deltaTime;
+        if (duration <= 0f) return;
 
-        foreach (GameObject obj in layer.layerObjects)
+        float t = Mathf.PingPong(
+            Time.time / duration,
+            1f
+        );
+
+        Color tint = Color.Lerp(
+            Color.white,
+            new Color(0.4f, 0.4f, 0.6f),
+            t
+        );
+
+        // Tint parallax layers
+        foreach (ParallaxLayer layer in layers)
         {
-            if (obj == null) continue;
-
-            // Move sprite
-            obj.transform.position += Vector3.left * speed;
-
-            // If sprite went too far left, respawn it to the right
-            if (obj.transform.position.x < despawnX)
+            foreach (GameObject obj in layer.layerObjects)
             {
-                // Find the rightmost edge (center + half width) of the layer
-                float rightmostEdge = GetRightmostEdgeInLayer(layer);
+                if (obj == null) continue;
 
-                // Get sprite width
-                SpriteRenderer spriteRenderer = obj.GetComponent<SpriteRenderer>();
-                float spriteWidth = spriteRenderer != null ? spriteRenderer.bounds.size.x : 20f;
+                SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+                if (sr == null) continue;
 
-                // Set new center position so the left edge sits at rightmostEdge + gap
-                float newCenterX = rightmostEdge + (spriteWidth * 0.5f) + respawnGap;
-
-                obj.transform.position = new Vector3(
-                    newCenterX,
-                    obj.transform.position.y,
-                    obj.transform.position.z
+                sr.color = Color.Lerp(
+                    Color.white,
+                    tint,
+                    layer.darknessMultiplier
                 );
             }
         }
+
+        // Tint player
+        ApplyTagTint("Player", tint);
+
+        // Tint obstacles
+        ApplyTagTint("Obstacle", tint);
+    }
+    void ApplyTagTint(string tagName, Color tint)
+    {
+        GameObject[] objects =
+            GameObject.FindGameObjectsWithTag(tagName);
+
+        foreach (GameObject obj in objects)
+        {
+            SpriteRenderer[] renderers =
+                obj.GetComponentsInChildren<SpriteRenderer>();
+
+            foreach (SpriteRenderer sr in renderers)
+            {
+                sr.color = tint;
+            }
+        }
     }
 
-    float GetRightmostXInLayer(ParallaxLayer layer)
+    void MoveLayer(ParallaxLayer layer)
     {
-        float rightmostX = float.MinValue;
+        if (layer.layerObjects == null || layer.layerObjects.Length == 0)
+            return;
+
+        float baseMultiplier =
+            layer.scrollSpeed * globalSpeedMultiplier;
+
+        float worldSpeed =
+            GameManager.Instance.worldSpeed;
+
+        float speed =
+            worldSpeed * baseMultiplier * Time.deltaTime;
 
         foreach (GameObject obj in layer.layerObjects)
         {
             if (obj == null) continue;
 
-            if (obj.transform.position.x > rightmostX)
+            obj.transform.position += Vector3.left * speed;
+
+            if (obj.transform.position.x < despawnX)
             {
-                rightmostX = obj.transform.position.x;
+                float rightmostEdge =
+                    GetRightmostEdgeInLayer(layer);
+
+                SpriteRenderer sr =
+                    obj.GetComponent<SpriteRenderer>();
+
+                float width =
+                    sr != null
+                    ? sr.bounds.size.x
+                    : 20f;
+
+                float newCenterX =
+                    rightmostEdge +
+                    (width * 0.5f) +
+                    respawnGap;
+
+                obj.transform.position =
+                    new Vector3(
+                        newCenterX,
+                        obj.transform.position.y,
+                        obj.transform.position.z
+                    );
             }
         }
-
-        return rightmostX;
     }
 
-    // Returns the x coordinate of the rightmost edge (center + half width) among objects in the layer.
-    float GetRightmostEdgeInLayer(ParallaxLayer layer)
+    float GetRightmostEdgeInLayer(
+        ParallaxLayer layer)
     {
         float rightmost = float.MinValue;
 
@@ -109,15 +150,22 @@ public class MultiLayerParallax : MonoBehaviour
         {
             if (obj == null) continue;
 
-            float halfWidth = 10f;
-            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
-            if (sr != null)
-                halfWidth = sr.bounds.size.x * 0.5f;
+            SpriteRenderer sr =
+                obj.GetComponent<SpriteRenderer>();
 
-            float edge = obj.transform.position.x + halfWidth;
-            if (edge > rightmost) rightmost = edge;
+            float halfWidth =
+                sr != null
+                ? sr.bounds.size.x * 0.5f
+                : 10f;
+
+            float edge =
+                obj.transform.position.x +
+                halfWidth;
+
+            if (edge > rightmost)
+                rightmost = edge;
         }
 
-        return rightmost == float.MinValue ? 0f : rightmost;
+        return rightmost;
     }
 }

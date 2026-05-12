@@ -135,3 +135,6 @@ MonoBehaviour:
   colorID: 0
   gridPos: {x: 0, y: 0}
   isSnapped: 0
+  popDuration: 0.12
+  popSoundCoolDown: 1
+  lastPopSoundTime: 0

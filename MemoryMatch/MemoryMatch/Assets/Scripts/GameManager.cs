@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
     public GameObject gameHUDPanel;
     public GameObject settingsPanel;
     public Button pauseButton;
+    public Button restartButton;
     public Toggle soundToggle;
     public TMP_Dropdown difficultyDropdown;
     public BoardManager boardManager;
@@ -226,6 +227,11 @@ public class GameManager : MonoBehaviour
         UpdateUI();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1f;
+    }
+    // UI-friendly restart entry point for Buttons (keeps behavior consistent with other UI methods)
+    public void OnRestartPressed()
+    {
+        RestartGame();
     }
     public void QuitGame()
     {

@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     public Camera mainCamera;
     public Color dayColor = new Color(0.53f, 0.81f, 0.92f, 1f);
     public Color nightColor = new Color(0.08f, 0.08f, 0.16f, 1f);
-    public float dayNightCycleDuration = 20f;
+    public float dayNightCycleDuration = 15f;
 
     private float dayNightTimer;
 

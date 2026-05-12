@@ -4516,8 +4516,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bird
   rb2d: {fileID: 1662827226}
-  flapStrength: 20
-  maxFallSpeed: 12
+  flapStrength: 18
+  maxFallSpeed: 11
   tiltSpeed: 3
   maxTiltAngle: 40
   minTiltAngle: -40

@@ -171,36 +171,38 @@ public class SnakeController : MonoBehaviour
 
             Grow();
 
+            int points = food != null ? food.GetPointValue() : 10;
+
             switch (eatenType)
             {
                 case FoodType.Normal:
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Normal);
-                    GameManager.Instance.AddScore(10);
+                    GameManager.Instance.AddScore(points);
                     temporarySpeedModifier = 0f;
-                    buffTimer = buffDuration;
-                    buffActive = true;
+                    buffTimer = 0f;
+                    buffActive = false;
                     currentBuffColor = Color.white;
                     GameManager.Instance.UpdateBuffTimer(0f, currentBuffColor);
                     break;
 
                 case FoodType.SpeedBoost:
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.SpeedBoost);
-                    GameManager.Instance.AddScore(15);
+                    GameManager.Instance.AddScore(points);
                     temporarySpeedModifier = -0.15f; 
                     buffTimer = buffDuration;
                     buffActive = true;
-                    currentBuffColor = Color.green;
-                    GameManager.Instance.UpdateBuffTimer(buffTimer,currentBuffColor);
+                    currentBuffColor = new Color(1f, 0.8f, 0f, 1f); // Gold
+                    GameManager.Instance.UpdateBuffTimer(buffTimer, currentBuffColor);
                     break;
 
                 case FoodType.Slow:
                     if (AudioManager.Instance != null) AudioManager.Instance.PlayFood(FoodType.Slow);
-                    GameManager.Instance.AddScore(5);
+                    GameManager.Instance.AddScore(points);
                     temporarySpeedModifier = 0.15f;
                     buffTimer = buffDuration;
                     buffActive = true;
-                    currentBuffColor = Color.gray;
-                    GameManager.Instance.UpdateBuffTimer(buffTimer,currentBuffColor);
+                    currentBuffColor = new Color(0.2f, 0.6f, 1f, 1f); // Blue
+                    GameManager.Instance.UpdateBuffTimer(buffTimer, currentBuffColor);
                     break;
             }
 

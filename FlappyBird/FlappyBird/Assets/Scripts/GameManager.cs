@@ -51,9 +51,10 @@ public class GameManager : MonoBehaviour
     private float survivalTime;
     private float lastScoreTime = -999f;
     private int comboStreak;
-    private bool reached1;
+    private bool reached5;
     private bool reached10;
     private bool reached50;
+
 
     private bool isPaused = false;
     public bool inputLocked = false;
@@ -73,7 +74,7 @@ public class GameManager : MonoBehaviour
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
 
-        reached1 = PlayerPrefs.GetInt("Ach_Reached1", 0) == 1;
+        reached5 = PlayerPrefs.GetInt("Ach_Reached5", 0) == 1;
         reached10 = PlayerPrefs.GetInt("Ach_Reached10", 0) == 1;
         reached50 = PlayerPrefs.GetInt("Ach_Reached50", 0) == 1;
 
@@ -103,6 +104,12 @@ public class GameManager : MonoBehaviour
         }
 
         survivalTime += Time.deltaTime;
+        if (comboStreak > 0 &&
+        Time.time - lastScoreTime > comboWindow)
+        {
+            comboStreak = 0;
+            UpdateUI();
+        }
     }
 
     public void StartGame()
@@ -150,11 +157,15 @@ public class GameManager : MonoBehaviour
         }
 
         bool isCombo = Time.time - lastScoreTime <= comboWindow;
-        comboStreak = isCombo ? comboStreak + 1 : 1;
+
+        comboStreak = isCombo
+            ? comboStreak + 1
+            : 1;
+
         lastScoreTime = Time.time;
 
-        int totalToAdd = amount + Mathf.Max(0, comboStreak - 1) * comboBonus;
-        score += totalToAdd;
+        int comboExtra = Mathf.Max(0, comboStreak - 1) * comboBonus;
+        score += amount + comboExtra;
 
         if (AudioManager.Instance != null)
         {
@@ -180,6 +191,7 @@ public class GameManager : MonoBehaviour
         {
             highScore = score;
             PlayerPrefs.SetInt("HighScore", highScore);
+            PlayerPrefs.Save();
             UpdateHighScorePanel();
         }
 
@@ -223,7 +235,7 @@ public class GameManager : MonoBehaviour
     private string GetAchievementsSummary()
     {
         List<string> reached = new List<string>();
-        if (reached1) reached.Add("First step");
+        if (reached5) reached.Add("First step");
         if (reached10) reached.Add("10 points");
         if (reached50) reached.Add("50 points");
 
@@ -357,31 +369,63 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
+    //private void CheckAchievements()
+    //{
+
+    //    // Legacy check
+    //    if (!reached5 && score >= 5)
+    //    {
+    //        reached5 = true;
+    //        PlayerPrefs.SetInt("Ach_Reached5", 1);
+    //    }
+    //    if (!reached10 && score >= 10)
+    //    {
+    //        reached10 = true;
+    //        PlayerPrefs.SetInt("Ach_Reached10", 1);
+    //    }
+    //    if (!reached50 && score >= 50)
+    //    {
+    //        reached50 = true;
+    //        PlayerPrefs.SetInt("Ach_Reached50", 1);
+    //    }
+    //}
     private void CheckAchievements()
     {
-        if (!reached1 && score >= 1)
+        bool unlockedSomething = false;
+
+        if (!reached5 && score >= 5)
         {
-            reached1 = true;
-            ShowAchievement("Achievement unlocked: First step");
-            PlayerPrefs.SetInt("Ach_Reached1", 1);
-            PlayerPrefs.Save();
+            reached5 = true;
+            unlockedSomething = true;
+
+            PlayerPrefs.SetInt("Ach_Reached5", 1);
+            ShowAchievement("Achievement Unlocked!\nFirst Step");
         }
+
         if (!reached10 && score >= 10)
         {
             reached10 = true;
-            ShowAchievement("Achievement unlocked: 10 points");
+            unlockedSomething = true;
+
             PlayerPrefs.SetInt("Ach_Reached10", 1);
-            PlayerPrefs.Save();
+            ShowAchievement("Achievement Unlocked!\n10 Points");
         }
+
         if (!reached50 && score >= 50)
         {
             reached50 = true;
-            ShowAchievement("Achievement unlocked: 50 points");
+            unlockedSomething = true;
+
             PlayerPrefs.SetInt("Ach_Reached50", 1);
+            ShowAchievement("Achievement Unlocked!\n50 Points");
+        }
+
+        if (unlockedSomething)
+        {
             PlayerPrefs.Save();
+            UpdateHighScorePanel();
         }
     }
-
     private void ShowAchievement(string message)
     {
         if (achievementUI != null)
@@ -488,7 +532,7 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.DeleteKey("Ach_Reached50");
         PlayerPrefs.Save();
 
-        reached1 = reached10 = reached50 = false;
+        reached5 = reached10 = reached50 = false;
 
         UpdateHighScorePanel();
         UpdateUI();
