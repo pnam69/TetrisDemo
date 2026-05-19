@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
     private float survivalTime;
     private float lastScoreTime = -999f;
     private int comboStreak;
-    private bool reached5;
+    private bool reached1;
     private bool reached10;
     private bool reached50;
 
@@ -74,7 +74,7 @@ public class GameManager : MonoBehaviour
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
 
-        reached5 = PlayerPrefs.GetInt("Ach_Reached5", 0) == 1;
+        reached1 = PlayerPrefs.GetInt("Ach_Reached1", 0) == 1;
         reached10 = PlayerPrefs.GetInt("Ach_Reached10", 0) == 1;
         reached50 = PlayerPrefs.GetInt("Ach_Reached50", 0) == 1;
 
@@ -120,7 +120,6 @@ public class GameManager : MonoBehaviour
         survivalTime = 0f;
         isGameOver = false;
         isStarted = true;
-        // do not clear persisted achievement flags here
         isPaused = false;
 
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
@@ -129,7 +128,6 @@ public class GameManager : MonoBehaviour
         if (gameHUDPanel != null) gameHUDPanel.SetActive(true);
         if (pausePanel != null) pausePanel.SetActive(false);
 
-        // Ensure Bird.Start has executed before calling BeginPlay (so defaultGravityScale is set)
         if (bird != null)
         {
             StartCoroutine(BeginPlayNextFrame());
@@ -235,7 +233,7 @@ public class GameManager : MonoBehaviour
     private string GetAchievementsSummary()
     {
         List<string> reached = new List<string>();
-        if (reached5) reached.Add("First step");
+        if (reached1) reached.Add("First step");
         if (reached10) reached.Add("10 points");
         if (reached50) reached.Add("50 points");
 
@@ -393,12 +391,12 @@ public class GameManager : MonoBehaviour
     {
         bool unlockedSomething = false;
 
-        if (!reached5 && score >= 5)
+        if (!reached1 && score >= 1)
         {
-            reached5 = true;
+            reached1 = true;
             unlockedSomething = true;
 
-            PlayerPrefs.SetInt("Ach_Reached5", 1);
+            PlayerPrefs.SetInt("Ach_Reached1", 1);
             ShowAchievement("Achievement Unlocked!\nFirst Step");
         }
 
@@ -460,7 +458,7 @@ public class GameManager : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = score.ToString();
+            scoreText.text = "Score: "+ score.ToString();
         }
 
         if (highScoreText != null)
@@ -517,7 +515,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator BeginPlayNextFrame()
     {
-        yield return null; // wait one frame
+        yield return null;
         if (bird != null)
             bird.BeginPlay();
     }
@@ -532,7 +530,7 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.DeleteKey("Ach_Reached50");
         PlayerPrefs.Save();
 
-        reached5 = reached10 = reached50 = false;
+        reached1 = reached10 = reached50 = false;
 
         UpdateHighScorePanel();
         UpdateUI();

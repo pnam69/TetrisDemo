@@ -60,17 +60,27 @@ public class Food : MonoBehaviour
     {
         if (spriteRenderer == null) return;
 
-        // Speed boost: glow effect
         if (foodType == FoodType.SpeedBoost)
         {
-            float glow = Mathf.Sin(Time.time * 8f) * 0.3f + 0.7f;
-            spriteRenderer.color = new Color(1f, 0.8f * glow, 0f, 1f);
+            float glow = Mathf.Sin(Time.time * 8f) * 0.2f + 0.8f;
+
+            spriteRenderer.color = Color.white * glow;
+            spriteRenderer.color = new Color(
+                spriteRenderer.color.r,
+                spriteRenderer.color.g,
+                spriteRenderer.color.b,
+                1f
+            );
         }
-        // Slow: subtle dimming effect
         else if (foodType == FoodType.Slow)
         {
             float dim = Mathf.Cos(Time.time * 4f) * 0.2f + 0.8f;
-            spriteRenderer.color = new Color(0.2f * dim, 0.6f * dim, 1f, 1f);
+            spriteRenderer.color = new Color(
+                0.2f * dim,
+                0.6f * dim,
+                1f * dim,
+                1f
+            );
         }
     }
 

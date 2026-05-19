@@ -19,11 +19,11 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Sky1
+  - Sky2
+  - Sky3
+  - Sky4
+  - Sky5
   - 
   - 
   - 
@@ -49,5 +49,34 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Sky1
+    uniqueID: 685723975
+    locked: 0
+  - name: Sky2
+    uniqueID: 2046723127
+    locked: 0
+  - name: Sky3
+    uniqueID: 1217052341
+    locked: 0
+  - name: Sky4
+    uniqueID: 3590880061
+    locked: 0
+  - name: Sky5
+    uniqueID: 3483962755
+    locked: 0
+  - name: Player
+    uniqueID: 1421004465
+    locked: 0
+  - name: Ground
+    uniqueID: 3835278931
+    locked: 0
+  - name: Pillar
+    uniqueID: 1491817737
+    locked: 0
   m_RenderingLayers:
   - Default
+  - Sky1
+  - Sky2
+  - Sky3
+  - Sky4
+  - Sky5

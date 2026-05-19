@@ -54,6 +54,9 @@ public class SnakeController : MonoBehaviour
         UpdateSpeed();
 
         foodSpawner = Object.FindFirstObjectByType<FoodSpawner>();
+
+        // Ensure head initially faces the starting direction
+        transform.rotation = DirectionToQuaternion(direction);
     }
 
     void Update()
@@ -119,6 +122,9 @@ public class SnakeController : MonoBehaviour
 
         direction = newDirection;
         directionChangedThisStep = true;
+
+        // Rotate head immediately to give visual feedback when changing direction
+        transform.rotation = DirectionToQuaternion(direction);
     }
     public void UpdateSpeed()
     {
@@ -145,6 +151,22 @@ public class SnakeController : MonoBehaviour
             bodySegments[i].position = previousPositions[i];
         }
 
+        // rotate head so sprite faces movement direction
+        transform.rotation = DirectionToQuaternion(direction);
+
+        // rotate body segments to face the segment ahead
+        for (int i = 0; i < bodySegments.Count; i++)
+        {
+            Transform seg = bodySegments[i];
+            Vector3 referencePos = (i == 0) ? transform.position : bodySegments[i - 1].position;
+            Vector3 dirVec = referencePos - seg.position;
+            if (dirVec != Vector3.zero)
+            {
+                float angle = Mathf.Atan2(dirVec.y, dirVec.x) * Mathf.Rad2Deg;
+                seg.rotation = Quaternion.Euler(0f, 0f, angle);
+            }
+        }
+
         // allow direction changes again after the snake has moved
         directionChangedThisStep = false;
     }
@@ -159,6 +181,17 @@ public class SnakeController : MonoBehaviour
             spawnPosition = bodySegments[bodySegments.Count - 1].position;
 
         GameObject newSegment = Instantiate(bodyPrefab, spawnPosition, Quaternion.identity);
+
+        // set new segment rotation to match the previous tail (or head if first)
+        if (bodySegments.Count == 0)
+        {
+            newSegment.transform.rotation = transform.rotation;
+        }
+        else
+        {
+            newSegment.transform.rotation = bodySegments[bodySegments.Count - 1].rotation;
+        }
+
         bodySegments.Add(newSegment.transform);
     }
 
@@ -216,5 +249,11 @@ public class SnakeController : MonoBehaviour
         {
             GameManager.Instance.GameOver();
         }
+    }
+
+    private Quaternion DirectionToQuaternion(Vector2Int dir)
+    {
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        return Quaternion.Euler(0f, 0f, angle);
     }
 }
