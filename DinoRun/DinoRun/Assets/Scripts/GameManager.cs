@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour
     {
         gameStarted = true;
         isGameOver = false;
+        score = 0;
     }
 
     public void GameOver()
