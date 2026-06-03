@@ -114,7 +114,7 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        Dictionary<int,int> pairToSprite = new Dictionary<int,int>();
+        Dictionary<int, int> pairToSprite = new Dictionary<int, int>();
         for (int i = 0; i < pairCount; i++)
         {
             pairToSprite[i] = pairSpriteList[i];
@@ -134,7 +134,7 @@ public class BoardManager : MonoBehaviour
         }
         if (grid != null)
             StartCoroutine(DisableGridNextFrame(grid));
-       // boardParent.GetComponent<GridLayoutGroup>().enabled = false;
+        // boardParent.GetComponent<GridLayoutGroup>().enabled = false;
     }
     private IEnumerator DisableGridNextFrame(GridLayoutGroup grid)
     {
@@ -230,10 +230,12 @@ public class BoardManager : MonoBehaviour
         foreach (Transform t in boardParent)
         {
             Card c = t.GetComponent<Card>();
-            if (c != null && !c.IsMatched)
+            if (c != null && !c.IsMatched && !c.IsFlipped)
+            {
                 cards.Add(c);
+            }
         }
-
+        Debug.Log($"Found {cards.Count} available cards");
         // find any matching pair by id
         for (int i = 0; i < cards.Count; i++)
         {
@@ -244,6 +246,7 @@ public class BoardManager : MonoBehaviour
                     cards[i].RevealTemporary(1f);
                     cards[j].RevealTemporary(1f);
                     yield break;
+                    Debug.Log($"Revealing pair {cards[i].cardID}");
                 }
             }
         }
@@ -290,12 +293,28 @@ public class BoardManager : MonoBehaviour
     }
     public void TryUseHint()
     {
-        if (currentHintCooldown > 0f) return;
+        if (currentHintCooldown > 0f)
+            return;
+
+        if (!canSelect)
+            return;
+
+        //if (firstCard != null || secondCard != null)
+        //    return;
 
         RevealOnePairTemporarily();
 
         LevelData lvl = GameManager.Instance.levelManager.GetCurrentLevel();
         if (lvl != null)
             currentHintCooldown = lvl.hintCooldown;
+        Debug.Log("Hint requested");
+
+        if (currentHintCooldown > 0f)
+        {
+            Debug.Log("Hint blocked by cooldown");
+            return;
+        }
+
+        RevealOnePairTemporarily();
     }
 }

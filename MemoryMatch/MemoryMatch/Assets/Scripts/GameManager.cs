@@ -44,6 +44,11 @@ public class GameManager : MonoBehaviour
     public bool isStarted = false;
     public int highScore = 0;
 
+    [Header("Win Button")]
+    public Button nextButton;
+    public Image nextButtonImage;
+    public TMP_Text nextButtonText;
+
     [Header("Level Settings")]
     public int pairCount = 4;
     public float timeLimit = 60f;
@@ -129,15 +134,15 @@ public class GameManager : MonoBehaviour
     private void FixBoardRaycastBlocking()
     {
         // Panel backgrounds should not block raycasts; only buttons should be interactive
+        // We do NOT change hierarchy order (SetAsLastSibling) because that breaks visuals.
 
         if (gameHUDPanel != null)
         {
             Image hudBg = gameHUDPanel.GetComponent<Image>();
             if (hudBg != null)
+            {
                 hudBg.raycastTarget = false;
-
-            if (gameHUDPanel.transform.parent != null)
-                gameHUDPanel.transform.SetAsLastSibling();
+            }
         }
 
         if (pausePanel != null)
@@ -145,9 +150,6 @@ public class GameManager : MonoBehaviour
             Image pauseBg = pausePanel.GetComponent<Image>();
             if (pauseBg != null)
                 pauseBg.raycastTarget = false;
-
-            if (pausePanel.transform.parent != null)
-                pausePanel.transform.SetAsLastSibling();
         }
 
         if (gameOverPanel != null)
@@ -166,13 +168,18 @@ public class GameManager : MonoBehaviour
 
         if (boardManager != null && boardManager.boardParent != null)
         {
+            // The board container background should not block raycasts
             Image boardBg = boardManager.boardParent.GetComponent<Image>();
             if (boardBg != null)
-                boardBg.raycastTarget = true;
+                boardBg.raycastTarget = false;
 
+            // Cards shouldn't be blocked by the board background
             Image[] boardImages = boardManager.boardParent.GetComponentsInChildren<Image>();
             foreach (Image img in boardImages)
-                img.raycastTarget = true;
+            {
+                if (img != boardBg)
+                    img.raycastTarget = true;
+            }
         }
 
         if (pauseButton != null)
@@ -207,7 +214,16 @@ public class GameManager : MonoBehaviour
         {
             GameOver();
         }
+        if (hintTimer > 0)
+        {
+            hintTimer -= Time.deltaTime;
 
+            if (hintTimer < 0)
+                hintTimer = 0;
+
+            if (hintText != null)
+                hintText.text = "Hint CD: " + Mathf.Ceil(hintTimer) + "s";
+        }
         if (timerText != null) timerText.text = Mathf.Ceil(timeRemaining).ToString();
 
         if (isGameOver && Input.GetKeyDown(KeyCode.R))
@@ -227,6 +243,8 @@ public class GameManager : MonoBehaviour
         if (winPanel != null) winPanel.SetActive(false);
         if (levelManager != null)
             levelManager.ResetLevels();
+        if (nextButtonText != null)
+            nextButtonText.text = "Next";
         LevelData lvl = levelManager.GetCurrentLevel();
         level = 1;
         timeRemaining = lvl.timeLimit;
@@ -376,11 +394,16 @@ public class GameManager : MonoBehaviour
         Application.Quit();
 #endif
     }
+    private bool IsLastLevel()
+    {
+        if (levelManager == null)
+            return false;
+
+        return levelManager.currentLevel >= levelManager.levels.Length - 1;
+    }
 
     public void WinGame()
     {
-        // level complete
-
         isStarted = false;
         Time.timeScale = 0f;
 
@@ -389,9 +412,19 @@ public class GameManager : MonoBehaviour
 
         if (winPanel != null)
             winPanel.SetActive(true);
+
         if (winText != null)
         {
-            winText.text = "Score: " + score + "\nMoves: " + moveCount + "\nTime Left: " + Mathf.Ceil(timeRemaining);
+            winText.text = "Score: " + score +
+                           "\nMoves: " + moveCount +
+                           "\nTime Left: " + Mathf.Ceil(timeRemaining);
+        }
+
+        // Change button text
+        if (nextButtonText != null)
+        {
+            nextButtonText.text =
+                IsLastLevel() ? "Replay" : "Next";
         }
     }
 
@@ -462,17 +495,17 @@ public class GameManager : MonoBehaviour
         if (winPanel != null)
             winPanel.SetActive(false);
 
+        // Replay on last level
+        if (IsLastLevel())
+        {
+            RestartGame();
+            return;
+        }
+
         bool hasNextLevel = false;
 
         if (levelManager != null)
             hasNextLevel = levelManager.NextLevel();
-
-        if (!hasNextLevel)
-        {
-        // all levels completed
-            MainMenuAfterFinish();
-            return;
-        }
 
         LevelData lvl = levelManager.GetCurrentLevel();
 
@@ -485,6 +518,7 @@ public class GameManager : MonoBehaviour
             boardManager.ResetBoard();
             boardManager.GenerateBoard();
         }
+
         UpdateUI();
 
         isStarted = true;
@@ -495,7 +529,6 @@ public class GameManager : MonoBehaviour
     {
         if (boardManager != null)
             boardManager.boardParent.gameObject.SetActive(false);
-
         mainMenuPanel.SetActive(true);
         gameHUDPanel.SetActive(false);
 
@@ -520,9 +553,12 @@ public class GameManager : MonoBehaviour
     {
         if (!isStarted || isGameOver) return;
 
+        if (hintTimer > 0)
+            return;
+
         if (boardManager != null)
             boardManager.TryUseHint();
 
-        // hint used
+        hintTimer = hintCooldown;
     }
 }

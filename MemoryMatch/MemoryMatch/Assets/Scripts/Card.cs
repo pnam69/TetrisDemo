@@ -109,7 +109,12 @@ public class Card : MonoBehaviour
 
     private IEnumerator RevealTempRoutine(float duration)
     {
-        if (isMatched || isFlipped) yield break;
+        if (isMatched || isFlipped)
+        {
+            Debug.Log($"Hint skipped card {cardID}");
+            yield break;
+        }
+        Debug.Log($"Hint revealed card {cardID}");
 
         isFlipped = true;
         if (backImage != null)
