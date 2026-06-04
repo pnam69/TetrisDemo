@@ -1,0 +1,12 @@
+# ninja log v5
+104	1315	8022397408901537	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	edcf89378f3b8231
+1321	3545	8022397429244182	D:/Android/terisdemo/TerisDemo/Snake/Snake/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m653q1m/obj/arm64-v8a/libswappywrapper.so	9c8ca3be96136673
+38	4367	8022397439989968	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	6736f1befced319b
+25	4382	8022397440255946	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	b2ea0797aaeb4ee1
+68	4390	8022397440587295	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	93b258a9afaa01e4
+80	4435	8022397441239496	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	a02a911be9757055
+1	4515	8022397442012039	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	6bfbcdd26aa372a7
+91	5000	8022397446878625	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	d19aee780d47248d
+55	5095	8022397447798555	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	c151f669d6b5629b
+15	5243	8022397449369841	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	11a1f5cbd3abbedc
+5243	5333	8022397450345539	D:/Android/terisdemo/TerisDemo/Snake/Snake/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m653q1m/obj/arm64-v8a/libgame.so	4a2c9aa72bbd123d

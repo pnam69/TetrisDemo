@@ -1,0 +1,3 @@
+D:\Android\terisdemo\TerisDemo\DinoRun\DinoRun\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+D:\Android\terisdemo\TerisDemo\DinoRun\DinoRun\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\FramePacing\CMakeLists.txt
+D:\Android\terisdemo\TerisDemo\DinoRun\DinoRun\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt

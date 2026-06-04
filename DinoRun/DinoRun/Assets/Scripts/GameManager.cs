@@ -3,7 +3,7 @@
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-
+    public CameraShake cameraShake;
     public float worldSpeed = 5f;
     public float speedIncrease = 0.1f;
     public float score = 0f;
@@ -19,6 +19,12 @@ public class GameManager : MonoBehaviour
 
     private float dayNightTimer;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+
+    public AudioClip jumpSfx;
+    public AudioClip slideSfx;
+    public AudioClip deathSfx;
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -57,6 +63,11 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         isGameOver = true;
+
+        if (cameraShake != null)
+        {
+            cameraShake.Shake(0.3f, 0.15f);
+        }
     }
 
     private void ApplyDayNightColor()
@@ -68,5 +79,19 @@ public class GameManager : MonoBehaviour
 
         float t = Mathf.PingPong(dayNightTimer / dayNightCycleDuration, 1f);
         mainCamera.backgroundColor = Color.Lerp(dayColor, nightColor, t);
+    }
+    public void PlayJumpSound()
+    {
+        audioSource.PlayOneShot(jumpSfx);
+    }
+
+    public void PlaySlideSound()
+    {
+        audioSource.PlayOneShot(slideSfx);
+    }
+
+    public void PlayDeathSound()
+    {
+        audioSource.PlayOneShot(deathSfx);
     }
 }

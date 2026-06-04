@@ -1,0 +1,12 @@
+# ninja log v5
+67	333	8021764926283737	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	60b15fd1009831a1
+334	686	8021764929335623	D:/Android/terisdemo/TerisDemo/DinoRun/DinoRun/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/b5a415x4/obj/arm64-v8a/libswappywrapper.so	27456fe7a787f2d4
+35	1383	8021764936726296	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	3cd15f0bff6d40c6
+28	1396	8021764936835490	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	f7653129567e0403
+1	1428	8021764937240652	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	8a7910e56494d93b
+44	1457	8021764937542048	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	4360fa38e18bfda5
+7	1514	8021764938100155	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	91173b6cfbe9bc47
+54	1625	8021764939182411	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	c0419a72c0189730
+20	1744	8021764940390958	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	e17709d0560da449
+12	1853	8021764941479177	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	cc77ce29a55c02a9
+1854	1949	8021764942464593	D:/Android/terisdemo/TerisDemo/DinoRun/DinoRun/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/b5a415x4/obj/arm64-v8a/libgame.so	2c71f0a577d30de5

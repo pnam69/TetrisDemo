@@ -43,9 +43,9 @@ public class Dinosaur : MonoBehaviour
     private bool jumpHeld;
     private bool slidePressed;
     private int jumpCount;
-
     private float slideTimer;
     private bool pendingEndSlide = false;
+
 
     void Update()
     {
@@ -189,6 +189,7 @@ public class Dinosaur : MonoBehaviour
     void Jump()
     {
         jumpCount++;
+        GameManager.Instance.PlayJumpSound();
         rb.linearVelocity = new Vector2(0, jumpForce);
         jumpHoldTimer = maxJumpHoldTime;
         currentState = PlayerState.Jump;
@@ -197,13 +198,14 @@ public class Dinosaur : MonoBehaviour
 
     void StartSlide()
     {
+        GameManager.Instance.PlaySlideSound();
         currentState = PlayerState.Slide;
         slideTimer = slideDuration;
 
         mainCollider.enabled = false;
         slideCollider.enabled = true;
-
         slidePressed = false;
+
     }
 
     void EndSlide()
@@ -290,6 +292,7 @@ public class Dinosaur : MonoBehaviour
 
     }
 
+
     void UpdateAnimation()
     {
         animator.SetInteger("State", (int)currentState);
@@ -322,6 +325,7 @@ public class Dinosaur : MonoBehaviour
     }
     void Die()
     {
+        GameManager.Instance.PlayDeathSound();
         currentState = PlayerState.Dead;
         rb.linearVelocity = Vector2.zero;
         GameManager.Instance.GameOver();

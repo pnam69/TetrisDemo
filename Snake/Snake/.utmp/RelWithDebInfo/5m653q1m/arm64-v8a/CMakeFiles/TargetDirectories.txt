@@ -1,0 +1,8 @@
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/CMakeFiles/rebuild_cache.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/GameActivity/CMakeFiles/game.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/FramePacing/CMakeFiles/swappywrapper.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/FramePacing/CMakeFiles/edit_cache.dir
+D:/Android/terisdemo/TerisDemo/Snake/Snake/.utmp/RelWithDebInfo/5m653q1m/arm64-v8a/FramePacing/CMakeFiles/rebuild_cache.dir
